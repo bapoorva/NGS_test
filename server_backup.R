@@ -34,14 +34,31 @@ library(ggrepel)
 library(readxl)
 library(biomaRt)
 
+#load entrez id's for kegg pathway
+data(kegg.sets.mm)
+#load indexes for signaling and metabolic pathways
+data(sigmet.idx.mm)
+#get entrez id's for signaling and metabolic pathwaysmera
+kegg.sets.mm = kegg.sets.mm[sigmet.idx.mm]
+
+data(go.sets.mm)
+data(go.subs.mm)
+
 #Create a theme for all plots.
 plotTheme <-theme_bw() + theme(axis.title.x = element_text(face="bold", size=12),
                                axis.text.x  = element_text(angle=35, vjust=0.5, size=12),
                                axis.title.y = element_text(face="bold", size=12),
                                axis.text.y  = element_text(angle=0, vjust=0.5, size=12))
 
-server <- function(input, output) {
 
+
+
+# Read input file
+shinyServer(function(input, output,session) {
+  #~~~~~~~~~~~~~~global variables~~~~~~~~~~~#
+  keggresids=as.character()
+  pData=data.frame()
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
   ###################################################
   ###################################################
   ####### LOAD EXCEL AND POPULATE DROP DOWN #########
@@ -60,12 +77,6 @@ server <- function(input, output) {
     selectInput("projects","Select a project",as.list(sort(as.character(prj))))
   })
   
-  ###################################################
-  ###################################################
-  ####### LOAD RDATA FILE AND GET CONTRASTS##########
-  ###################################################
-  ###################################################
-  
   #Load Rdata
   fileload <- reactive({
     inFile = paste('data/',as.character(input$projects),'.RData',sep = '')
@@ -81,186 +92,7 @@ server <- function(input, output) {
     contrasts=as.list(as.character(unlist(lapply((names(lim)),factor))))
     selectInput("contrast","Select a comparison",contrasts,"pick one")
   })
-
-  ###################################################
-  ###################################################
-  ##################### PCA PLOT ####################
-  ###################################################
-  ###################################################
-  output$pcaxoptions <- renderUI({
-    selectInput("pcaxaxes","Select Principle Component to plot on the X-axis ",c(1:10))
-  })
   
-  output$pcipslide <- renderUI({
-    textInput(inputId = 'pcipslide', label = "Enter top number of input genes that show maximum variance", value = '500')
-    #sliderInput("pcipslide", label = h5("Slider: Number of input genes that show maximum variance"), min = 100,max = 1000, value = 200)
-  })
-  
-  output$pcslide <- renderUI({
-    textInput(inputId = 'pcslide', label = "Enter number of genes to view in the biplot", value = '0')
-    #sliderInput("pcslide", label = h5("Slider: Number of genes to view in the biplot"), min = 2,max = 50, value = 30)
-  })
-  
-  output$pcayoptions <- renderUI({
-    selectInput("pcayaxes","Select Principle Component to plot on the Y-axis",c(1:10),selected=2)
-  })
-  
-  output$biplottitle <- renderText({
-    pcaxaxes=input$pcaxaxes
-    pcayaxes=input$pcayaxes
-    text=as.character(paste("Dim",pcaxaxes," vs Dim",pcayaxes,sep=""))
-    return(text)
-  })
-  
-  plotbiplot = reactive({
-    res.pca = res_pca()
-    x=as.numeric(input$pcaxaxes)
-    y=as.numeric(input$pcayaxes)
-    results=fileload()
-    v = results$eset
-    pData<-phenoData(v)
-    validate(
-      need(input$pcslide, "Enter number of genes to view in biplot")
-    )
-    if(input$pcslide==0){
-      fviz_pca_ind(res.pca, repel=T,geom='point',label='var',addEllipses=FALSE, habillage = pData$maineffect,pointsize = 3.35,axes=c(x,y))+scale_shape_manual(values = c(rep(19,length(unique(pData$maineffect)))))+theme(axis.title.x = element_text(face="bold", size=14),
-                                                                                                                                                                                                                          axis.title.y = element_text(face="bold", size=14),
-                                                                                                                                                                                                                          legend.text  = element_text(angle=0, vjust=0.5, size=14),
-                                                                                                                                                                                                                          legend.title  = element_text(angle=0, vjust=0.5, size=14),
-                                                                                                                                                                                                                          plot.title  = element_text(angle=0, vjust=0.5, size=16))
-      
-    }
-    #fviz_pca_ind(res.pca, geom = c("point", "text"))}
-    else{fviz_pca_biplot(res.pca,repel=T, label=c("var","ind"),habillage = as.factor(pData$maineffect),pointsize = 3.35,axes=c(x,y),select.var = list(contrib = as.numeric(input$pcslide)))+scale_shape_manual(values = c(rep(19,length(unique(pData$maineffect)))))+theme(axis.title.x = element_text(face="bold", size=14),
-                                                                                                                                                                                                                                                                           axis.title.y = element_text(face="bold", size=14),
-                                                                                                                                                                                                                                                                           legend.text  = element_text(angle=0, vjust=0.5, size=14),
-                                                                                                                                                                                                                                                                           legend.title  = element_text(angle=0, vjust=0.5, size=14),
-                                                                                                                                                                                                                                                                           plot.title  = element_text(angle=0, vjust=0.5, size=16))}
-  })
-  
-  output$biplot = renderPlot({
-    plotbiplot()
-  })
-  
-  output$dwldbiplot = renderUI({
-    downloadButton('downloadbiplot', 'Download Biplot')
-  }) 
-  
-  output$downloadbiplot <- downloadHandler(
-    filename = function() {
-      paste0("biplot.jpg")
-    },
-    content = function(file){
-      jpeg(file, quality = 100, width = 800, height = 800)
-      plot(plotbiplot())
-      dev.off()
-    })
-  
-  ###################################################
-  ###################################################
-  ########### VARIANCES OF PCA PLOT #################
-  ###################################################
-  ###################################################
-  
-  output$pcatitle <- renderText({
-    text="The proportion of variances retained by the principal components can be viewed in the scree plot. The scree plot is a graph of the eigenvalues/variances associated with components"
-    return(text)
-  })
-  
-  #get expression data and perform PCA
-  res_pca = reactive({
-    n=as.numeric(input$pcipslide)
-    validate(
-      need(as.numeric(input$pcipslide) > 199, "Minimum value of input genes that show maximum variance should at least be 200")
-    )
-    results=fileload()
-    v = results$eset
-    keepGenes <- v@featureData@data
-    #keepGenes <- v@featureData@data %>% filter(!(seq_name %in% c('X','Y')) & !(is.na(SYMBOL)))
-    pData<-phenoData(v)
-    v.filter = v[rownames(v@assayData$exprs) %in% rownames(keepGenes),]
-    Pvars <- apply(exprs(v.filter),1,var)
-    select <- order(Pvars, decreasing = TRUE)[seq_len(min(n,length(Pvars)))]
-    v.var <-v.filter[select,]
-    m<-exprs(v.var)
-    rownames(m) <- v.var@featureData@data$SYMBOL
-    m=as.data.frame(m)
-    m=unique(m)
-    res.pca = PCA(t(m), graph = FALSE)
-  })
-  
-  #get expression data and perform PCA
-  pcaplo_tab = reactive({
-    res.pca =res_pca()
-    eigenvalues = res.pca$eig
-    return(eigenvalues)
-  })
-  
-  output$pcaplot_tab = DT::renderDataTable({
-    DT::datatable(pcaplo_tab(),
-                  extensions = c('Scroller'),
-                  options = list(
-                    searchHighlight = TRUE,
-                    scrollX = TRUE
-                  ))
-  })
-  
-  output$pcaplot_ip = renderPlot({
-    res.pca = res_pca()
-    fviz_screeplot(res.pca, ncp=10)
-  })
-  
-
-  ###################################################
-  ###################################################
-  ##################3D PCA PLOT #####################
-  ###################################################
-  ###################################################
-  output$pcaplot3d = renderRglwidget({
-    v=datasetInput3()
-    results=fileload()
-    pData=pData(results$eset)
-    v=t(v)
-    v= v[,apply(v, 2, var, na.rm=TRUE) != 0]
-    #      pca <- prcomp( v, scale= TRUE )
-    #      vars <- apply(pca$x, 2, var)
-    #      props <- round((vars / sum(vars))*100,1)
-    #      groups=factor(gsub('-','_',pData$maineffect))
-    
-    pca <- res_pca()
-    vars <- apply(pca$var$coord, 2, var)
-    props <- round((vars / sum(vars))*100,1)
-    groups=factor(gsub('-','_',pData$maineffect))
-    
-    
-    ########
-    try(rgl.close())
-    open3d()
-    # resize window
-    par3d(windowRect = c(100, 100, 612, 612))
-    palette(c('blue','red','green','orange','cyan','black','brown','pink'))
-    plot3d(pca$ind$coord[,1:3], col =as.numeric(groups), type='s',alpha=.75,axes=F,
-           xlab=paste('PC1 (',props[1],'%)',sep=''),
-           ylab=paste('PC2 (',props[2],'%)',sep=''),
-           zlab=paste('PC3 (',props[3],'%)',sep='')
-    )
-    axes3d(edges=c("x--", "y--", "z"), lwd=2, expand=10, labels=FALSE,box=T)
-    grid3d("x")
-    grid3d("y")
-    grid3d("z")
-    l=length(levels(groups))
-    ll=1:l
-    y=1+(ll*15)
-    text3d(x=70, y=y, z=0.75,levels(groups) ,col="black")
-    points3d(x=90, y=y, z=0.75, col=as.numeric(as.factor(levels(groups))), size=6)
-    legend3d("topright", legend = levels(groups), pch = 16, col=palette(),cex=1, inset=c(0.02))
-    
-    #      rgl.snapshot('PCA_3d_test.png', fmt = "png", top = TRUE )
-    #      rgl.postscript('PCA_3D_test.pdf',fmt='pdf')
-    
-    #movie3d(spin3d(), duration = 5,movie='PCA_movie',dir='./' )
-    rglwidget()
-  })
   
   ###################################################
   ###################################################
@@ -278,6 +110,11 @@ server <- function(input, output) {
   #Display text in main panel
   output$pdesc <- renderText({
     desc=prjdesc()
+  })
+  
+  # Update tab1 in main panel
+  observe({
+    updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'tab1')
   })
   
   ###################################################
@@ -348,7 +185,10 @@ server <- function(input, output) {
                   rownames=FALSE,selection = list(mode = 'single', selected =1),escape=FALSE)
   })
   
-
+  # display data on tab 1
+  observe({
+    updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'tab1')
+  })
   
   #download data as excel sheet
   output$dwld <- downloadHandler(
@@ -416,7 +256,12 @@ server <- function(input, output) {
                   ),rownames=TRUE,selection = list(mode = 'single', selected =1),escape=FALSE)
   })
   
-
+  #display tab with the table only when the multiple contrast checkbox and the contrasts are selected
+  observe({
+    if(input$check>0){
+      updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'tab11')}
+    toggle(condition =input$check,selector = "#tabvalue li a[data-value=tab11]")
+  })
   ###################################################
   ###################################################
   ############# DISPLAY VOLCANO PLOT  ###############
@@ -528,17 +373,23 @@ server <- function(input, output) {
   })
   
   output$volcanoplot = renderPlotly({
-   # withProgress(session = session, message = 'Generating...',detail = 'Please Wait...',{
+    withProgress(session = session, message = 'Generating...',detail = 'Please Wait...',{
       input$radio
       input$lfc
       input$apval
       input$volcslider
       input$volcdrop
       volcanoplot_out()
-   # })
+    })
   })
   
- 
+  observe({
+    if(input$volcano>0){
+      updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'tabvolcano')}
+    toggle(condition =input$volcano,selector = "#tabvalue li a[data-value=tabvolcano]")
+  })
+  
+  
   ###################################################
   ###################################################
   ############## DISPLAY VOOM DATA ##################
@@ -573,10 +424,12 @@ server <- function(input, output) {
                                  buttons = c('copy', 'print')
                   ),rownames=FALSE,caption= "Voom data")
   })
-
-  output$dwldrawtab = renderUI({
-    downloadButton('rawdwld','Download Raw Data')
-  }) 
+  # display data in tab2
+  observe({
+    if(input$rawdata>0) {
+      updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'tab2') }
+  })
+  
   
   output$rawdwld <- downloadHandler(
     filename = function() { paste(input$projects, '_rawdata.csv', sep='') },
@@ -601,7 +454,11 @@ server <- function(input, output) {
     selectInput("color","Select an Attribute",bpcols) #populate drop down menu with the phenodata columns
   })
   
- 
+  #textbox to enter x-axis variables
+  #   output$boxreorder <- renderUI({
+  #     textInput("boxlist", label = h5("Enter x-axis variables in the preferred order"), value = "")
+  #   })
+  #   
   dotplot_out = reactive({
     s = input$table_rows_selected #select rows from table
     dt = datasetInput() #load limma data
@@ -619,10 +476,25 @@ server <- function(input, output) {
     {genesymbol=dt1$ENSEMBL}
     else{
       genesymbol=dt1$SYMBOL} #get the gene symbol of the row selected
-
+    
+    #To reorder x-axis, take in input list, split by comma and pass that as a variable to ggplot
+    #     a=input$boxlist
+    #     aa=strsplit(a,",")
+    #     aaa=unlist(aa)
+    #     me=factor(e$maineffect,levels=c(aaa))
+    #     
+    #     if(input$boxreorder>0){
+    #     gg=ggplot(e,aes_string(x=me,y="signal",col=input$color))+plotTheme+guides(color=guide_legend(title=as.character(input$color)))+
+    #       labs(title=genesymbol, x="Condition", y="Expression Value") + geom_point(size=5,position=position_jitter(w = 0.1))+
+    #       stat_summary(fun.y = "mean", fun.ymin = "mean", fun.ymax= "mean", size= 0.3, geom = "crossbar",width=.2)
+    #     }
+    #     else{
     gg=ggplot(e,aes_string(x="maineffect",y="signal",col=input$color))+plotTheme+guides(color=guide_legend(title=as.character(input$color)))+
       labs(title=genesymbol, x="Condition", y="Expression Value") + geom_point(size=5,position=position_jitter(w = 0.1))+
       stat_summary(fun.y = "mean", fun.ymin = "mean", fun.ymax= "mean", size= 0.3, geom = "crossbar",width=.2)
+    #   }
+    #plot data
+    #gg=ggplotly(gg)
     gg
   })
   
@@ -641,6 +513,215 @@ server <- function(input, output) {
       plot(dotplot_out())
       dev.off()
     })
+  
+  # update tab1 with dotplot
+  observe({
+    s = input$table_rows_selected
+    if(length(s)){
+      updateTabsetPanel(session = session, inputId = "tabvalue", selected = 'tab1')
+    }
+  })
+  
+  ###################################################
+  ###################################################
+  ########### VARIANCES OF PCA PLOT #################
+  ###################################################
+  ###################################################
+  
+  output$pcatitle <- renderText({
+    text="The proportion of variances retained by the principal components can be viewed in the scree plot. The scree plot is a graph of the eigenvalues/variances associated with components"
+    return(text)
+  })
+  
+  #get expression data and perform PCA
+  res_pca = reactive({
+    n=as.numeric(input$pcipslide)
+    validate(
+      need(as.numeric(input$pcipslide) > 199, "Minimum value of input genes that show maximum variance should at least be 200")
+    )
+    results=fileload()
+    v = results$eset
+    keepGenes <- v@featureData@data
+    #keepGenes <- v@featureData@data %>% filter(!(seq_name %in% c('X','Y')) & !(is.na(SYMBOL)))
+    pData<-phenoData(v)
+    v.filter = v[rownames(v@assayData$exprs) %in% rownames(keepGenes),]
+    Pvars <- apply(exprs(v.filter),1,var)
+    select <- order(Pvars, decreasing = TRUE)[seq_len(min(n,length(Pvars)))]
+    v.var <-v.filter[select,]
+    m<-exprs(v.var)
+    rownames(m) <- v.var@featureData@data$SYMBOL
+    m=as.data.frame(m)
+    m=unique(m)
+    res.pca = PCA(t(m), graph = FALSE)
+  })
+  
+  #get expression data and perform PCA
+  pcaplo_tab = reactive({
+    res.pca =res_pca()
+    eigenvalues = res.pca$eig
+    return(eigenvalues)
+  })
+  
+  output$pcaplot_tab = DT::renderDataTable({
+    DT::datatable(pcaplo_tab(),
+                  extensions = c('Scroller'),
+                  options = list(
+                    searchHighlight = TRUE,
+                    scrollX = TRUE
+                  ),caption= "Amount of Variation explained by each Principle Component")
+  })
+  
+  output$pcaplot_ip = renderPlot({
+    res.pca = res_pca()
+    fviz_screeplot(res.pca, ncp=10)
+  })
+  
+  observe({
+    if(input$varpc>0){
+      updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'tabvar')}
+    toggle(condition =input$varpc,selector = "#tabvalue li a[data-value=tabvar]")
+  })
+  
+  ###################################################
+  ###################################################
+  ##################### PCA PLOT ####################
+  ###################################################
+  ###################################################
+  
+  output$pcaxoptions <- renderUI({
+    selectInput("pcaxaxes","Select Principle Component to plot on the X-axis ",c(1:10))
+  })
+  
+  output$pcipslide <- renderUI({
+    textInput(inputId = 'pcipslide', label = "Enter top number of input genes that show maximum variance", value = '500')
+    #sliderInput("pcipslide", label = h5("Slider: Number of input genes that show maximum variance"), min = 100,max = 1000, value = 200)
+  })
+  
+  output$pcslide <- renderUI({
+    textInput(inputId = 'pcslide', label = "Enter number of genes to view in the biplot", value = '0')
+    #sliderInput("pcslide", label = h5("Slider: Number of genes to view in the biplot"), min = 2,max = 50, value = 30)
+  })
+  
+  output$pcayoptions <- renderUI({
+    selectInput("pcayaxes","Select Principle Component to plot on the Y-axis",c(1:10),selected=2)
+  })
+  
+  output$biplottitle <- renderText({
+    pcaxaxes=input$pcaxaxes
+    pcayaxes=input$pcayaxes
+    text=as.character(paste("Dim",pcaxaxes," vs Dim",pcayaxes,sep=""))
+    return(text)
+  })
+  
+  plotbiplot = reactive({
+    res.pca = res_pca()
+    x=as.numeric(input$pcaxaxes)
+    y=as.numeric(input$pcayaxes)
+    results=fileload()
+    v = results$eset
+    pData<-phenoData(v)
+    validate(
+      need(input$pcslide, "Enter number of genes to view in biplot")
+    )
+    if(input$pcslide==0){
+      fviz_pca_ind(res.pca, repel=T,geom='point',label='var',addEllipses=FALSE, habillage = pData$maineffect,pointsize = 3.35,axes=c(x,y))+scale_shape_manual(values = c(rep(19,length(unique(pData$maineffect)))))+theme(axis.title.x = element_text(face="bold", size=14),
+                                                                                                                                                                                                                          axis.title.y = element_text(face="bold", size=14),
+                                                                                                                                                                                                                          legend.text  = element_text(angle=0, vjust=0.5, size=14),
+                                                                                                                                                                                                                          legend.title  = element_text(angle=0, vjust=0.5, size=14),
+                                                                                                                                                                                                                          plot.title  = element_text(angle=0, vjust=0.5, size=16))
+      
+    }
+    #fviz_pca_ind(res.pca, geom = c("point", "text"))}
+    else{fviz_pca_biplot(res.pca,repel=T, label=c("var","ind"),habillage = as.factor(pData$maineffect),pointsize = 3.35,axes=c(x,y),select.var = list(contrib = as.numeric(input$pcslide)))+scale_shape_manual(values = c(rep(19,length(unique(pData$maineffect)))))+theme(axis.title.x = element_text(face="bold", size=14),
+                                                                                                                                                                                                                                                                           axis.title.y = element_text(face="bold", size=14),
+                                                                                                                                                                                                                                                                           legend.text  = element_text(angle=0, vjust=0.5, size=14),
+                                                                                                                                                                                                                                                                           legend.title  = element_text(angle=0, vjust=0.5, size=14),
+                                                                                                                                                                                                                                                                           plot.title  = element_text(angle=0, vjust=0.5, size=16))}
+  })
+  
+  output$biplot = renderPlot({
+    plotbiplot()
+  })
+  
+  
+  output$downloadbiplot <- downloadHandler(
+    filename = function() {
+      paste0("biplot.jpg")
+    },
+    content = function(file){
+      jpeg(file, quality = 100, width = 800, height = 800)
+      plot(plotbiplot())
+      dev.off()
+    })
+  
+  observe({
+    #if(input$makepcaplot>0){
+    updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'tabpca')
+    #}
+  })
+  
+  observe({
+    if(input$makepcaplot>0){
+      updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'tabpca')
+    }
+  })
+  
+  ###################################################
+  ###################################################
+  ##################3D PCA PLOT #####################
+  ###################################################
+  ###################################################
+  output$pcaplot3d = renderRglwidget({
+    v=datasetInput3()
+    results=fileload()
+    pData=pData(results$eset)
+    v=t(v)
+    v= v[,apply(v, 2, var, na.rm=TRUE) != 0]
+    #      pca <- prcomp( v, scale= TRUE )
+    #      vars <- apply(pca$x, 2, var)
+    #      props <- round((vars / sum(vars))*100,1)
+    #      groups=factor(gsub('-','_',pData$maineffect))
+    
+    pca <- res_pca()
+    vars <- apply(pca$var$coord, 2, var)
+    props <- round((vars / sum(vars))*100,1)
+    groups=factor(gsub('-','_',pData$maineffect))
+    
+    
+    ########
+    try(rgl.close())
+    open3d()
+    # resize window
+    par3d(windowRect = c(100, 100, 612, 612))
+    palette(c('blue','red','green','orange','cyan','black','brown','pink'))
+    plot3d(pca$ind$coord[,1:3], col =as.numeric(groups), type='s',alpha=.75,axes=F,
+           xlab=paste('PC1 (',props[1],'%)',sep=''),
+           ylab=paste('PC2 (',props[2],'%)',sep=''),
+           zlab=paste('PC3 (',props[3],'%)',sep='')
+    )
+    axes3d(edges=c("x--", "y--", "z"), lwd=2, expand=10, labels=FALSE,box=T)
+    grid3d("x")
+    grid3d("y")
+    grid3d("z")
+    l=length(levels(groups))
+    ll=1:l
+    y=1+(ll*15)
+    text3d(x=70, y=y, z=0.75,levels(groups) ,col="black")
+    points3d(x=90, y=y, z=0.75, col=as.numeric(as.factor(levels(groups))), size=6)
+    legend3d("topright", legend = levels(groups), pch = 16, col=palette(),cex=1, inset=c(0.02))
+    
+    #      rgl.snapshot('PCA_3d_test.png', fmt = "png", top = TRUE )
+    #      rgl.postscript('PCA_3D_test.pdf',fmt='pdf')
+    
+    #movie3d(spin3d(), duration = 5,movie='PCA_movie',dir='./' )
+    rglwidget()
+  })
+  
+  observe({
+    if(input$pca3d>0){
+      updateTabsetPanel(session = session, inputId = 'tabvalue', selected = '3dpca')}
+    toggle(condition =input$pca3d,selector = "#tabvalue li a[data-value=3dpca]")
+  })
   
   ###################################################
   ###################################################
@@ -700,7 +781,13 @@ server <- function(input, output) {
     })
   })
   
-
+  # display data in tab gsea
+  observe({
+    if(input$camera>0){
+      updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'gsea')
+    }
+  })
+  
   #get the gene-list for every row in camera results table
   campick2 = reactive({
     results=fileload()
@@ -822,7 +909,11 @@ server <- function(input, output) {
     barcodeplot(stat2,index=ind)
   })
   
-
+  observe({
+    if(input$eplot>0){
+      updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'eplot')}
+    toggle(condition =input$eplot,selector = "#tabvalue li a[data-value=eplot]")
+  })
   ###################################################
   ###################################################
   ######### CREATE HEATMAP FROM CAMERA ##############
@@ -973,6 +1064,477 @@ server <- function(input, output) {
       aheatmap(as.matrix(top_expr),distfun=dist2,scale="row",Rowv=TRUE,Colv=TRUE,fontsize = 10,color = colorRampPalette(brewer.pal(n = 9, input$hmpcol))(30),labRow = sym)}
     else{aheatmap(as.matrix(top_expr),distfun=dist2,scale="row",Rowv=TRUE,Colv=TRUE,fontsize = 10,color = colorRampPalette(rev(brewer.pal(n = 9, input$hmpcol)))(30),labRow = sym)}
   }
+  
+  ######################################################################################################################################################       
+  # update heatmap tab with the heatmap
+  observe({
+    s = input$tablecam_rows_selected
+    if(length(s)){
+      updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'gsea')
+    }
+  })
+  
+  ##################################################
+  ###################################################
+  ################ SPIA PATHWAY ANALYSIS#############
+  ###################################################
+  ###################################################
+  
+  spia_op <- reactive({
+    validate(
+      need(input$runspia, "Please Click on the button to run SPIA ")
+    )
+    results=fileload()
+    contrast=input$contrast #get user input for contrast/comparison
+    c=paste('results$spia$',contrast,sep='') #get SPIA data corresponding to the contrast chosen
+    sp=eval(parse(text = c)) #convert string to variable
+    #spia_result=data.frame(name=rownames(sp),sp)
+    spia_result=data.frame(sp)
+    validate(
+      need(nrow(spia_result) > 1, "No Results")
+    )
+    spia_result$KEGGLINK <- paste0("<a href='",spia_result$KEGGLINK,"' target='_blank'>","Link to KEGG","</a>")
+    return(spia_result) 
+  })
+  
+  
+  output$spiaop <- DT::renderDataTable({
+    input$runspia
+    input$contrast
+    input$projects
+    withProgress(session = session, message = 'Calculating...',detail = 'This may take a while...',{
+      isolate({
+        DT::datatable(spia_op(),escape = FALSE,selection = list(mode = 'single', selected =1),
+                      extensions = c('Buttons','Scroller'),
+                      options = list(
+                        dom = 'RMDCT<"clear">lfrtip',
+                        searchHighlight = TRUE,
+                        pageLength = 10,
+                        lengthMenu = list(c(5, 10, 15, 20, 25, -1), c('5', '10', '15', '20', '25', 'All')),
+                        scrollX = TRUE,
+                        buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+                      ),rownames=FALSE)
+      })
+    })
+  })
+  
+  spiagenes = reactive({
+    spiaid=spia_op() 
+    final_res=datasetInput()
+    s=input$spiaop_rows_selected 
+    row=spiaid[s, ,drop=FALSE]
+    id=paste("mmu",row$ID,sep="")
+    #keggid = substr(keggid, start=1, stop=8)
+    allgenelist=keggLink("mmu",id) #for each kegg id, get gene list
+    p=strsplit(allgenelist,":")
+    genes_entrez=sapply(p,"[",2)
+    genelist=final_res[final_res$ENTREZID %in% genes_entrez,]
+    return(genelist) #return the genelist
+  })
+  
+  output$spiadesc <- renderText({
+    s = input$spiaop_rows_selected
+    dt = spia_op() 
+    dt = dt[s, , drop=FALSE]
+    camname=dt$Name
+    text=paste('Gene list for SPIA term :',camname,'-',dt[2],sep="")
+    
+    return(text)
+  })
+  
+  output$spiagenes = DT::renderDataTable({
+    DT::datatable(spiagenes(),
+                  extensions = c('Buttons','Scroller'),
+                  options = list(dom = 'Bfrtip',
+                                 searchHighlight = TRUE,
+                                 pageLength = 10,
+                                 lengthMenu = list(c(30, 50, 100, 150, 200, -1), c('30', '50', '100', '150', '200', 'All')),
+                                 scrollX = TRUE,
+                                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+                  ),rownames=FALSE,escape=FALSE,selection = list(mode = 'single', selected =1,caption="Genelist"))
+  })
+  
+  
+  # update tab with spia results
+  observe({
+    if(input$runspia > 0)
+    {
+      updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'spia')
+    }
+  })
+  
+  output$dwldspia <- downloadHandler(
+    filename = function() { paste(input$projects,'_',input$contrast, '_spia.csv', sep='') },
+    content = function(file) {
+      write.csv(spiaop(), file)
+    })
+  ##################################################
+  ##################################################
+  ############## GAGE GENE ONTOLOGY ################
+  ##################################################
+  ##################################################
+  
+  datasetInput7 = reactive({
+    validate(
+      need(input$gage, "Please Select Ontology")
+    )
+    final_res=datasetInput0.5() #get limma data
+    logfc=final_res$fc #get FC values from limma data
+    names(logfc)=final_res$ENTREZID # get entrez ids for each row
+    results=fileload()
+    pd=pData(results$eset)
+    organism=pd$organism
+    prjs=c("DS_FalcorFoxA2","YT_mir302","RJ_ESC_Laminin","RJ_CardiacHdac7_updated","DS_FalcorKO")
+    prj2=c("DK_IPSC_lungepi","ZA_Boa_PKM2")
+    if(!input$projects %in% prjs){
+      if(!input$projects %in% prj2){
+        validate(
+          need(length(unique(organism))==1,"Please check pData file for errors in organism column. Does it have more than one organism or is it empty?")
+        )
+        organism=unique(pd$organism)[1]
+      }}
+    if(input$projects %in% prjs){
+      organism="mouse"
+    }
+    else if(input$projects %in% prj2){
+      organism="human"
+    }
+    
+    #organism=pd$organism[1]
+    
+    if(organism=="human")
+    {
+      data(go.sets.hs) #load GO data from gage
+      data(go.subs.hs)
+      
+      if(input$gage=='BP')
+      {
+        gobpsets = go.sets.hs[go.subs.hs$BP]
+        go_res = gage(logfc, gsets=gobpsets)
+      }
+      else if(input$gage=='cc')
+      {
+        goccsets = go.sets.hs[go.subs.hs$CC]
+        go_res = gage(logfc, gsets=goccsets, same.dir=TRUE)
+      }
+      else if(input$gage=='MF')
+      {
+        gomfsets = go.sets.hs[go.subs.hs$MF]
+        go_res = gage(logfc, gsets=gomfsets, same.dir=TRUE)
+      }}
+    else if(organism=="Rat")
+    {
+      data(go.sets.rn) #load GO data from gage
+      data(go.subs.rn)
+      
+      if(input$gage=='BP')
+      {
+        gobpsets = go.sets.rn[go.subs.rn$BP]
+        go_res = gage(logfc, gsets=gobpsets)
+      }
+      else if(input$gage=='cc')
+      {
+        goccsets = go.sets.rn[go.subs.rn$CC]
+        go_res = gage(logfc, gsets=goccsets, same.dir=TRUE)
+      }
+      else if(input$gage=='MF')
+      {
+        gomfsets = go.sets.rn[go.subs.rn$MF]
+        go_res = gage(logfc, gsets=gomfsets, same.dir=TRUE)
+      }
+    }
+    else 
+    {
+      data(go.sets.mm) #load GO data from gage
+      data(go.subs.mm)
+      
+      if(input$gage=='BP')
+      {
+        gobpsets = go.sets.mm[go.subs.mm$BP]
+        go_res = gage(logfc, gsets=gobpsets)
+      }
+      else if(input$gage=='cc')
+      {
+        goccsets = go.sets.mm[go.subs.mm$CC]
+        go_res = gage(logfc, gsets=goccsets, same.dir=TRUE)
+      }
+      else if(input$gage=='MF')
+      {
+        gomfsets = go.sets.mm[go.subs.mm$MF]
+        go_res = gage(logfc, gsets=gomfsets, same.dir=TRUE)
+      }
+    }
+    
+    return(go_res)
+  })
+  
+  #Get all GO terms based on user-selection (upregulated/downregulated)
+  datasetInput8 = reactive({
+    go_res=datasetInput7()
+    go_dd=input$go_dd
+    if(go_dd=="upreg"){
+      res=data.frame(go_res$greater)} #load limma data
+    else if(go_dd=="downreg"){
+      res=data.frame(go_res$less)
+    }
+    res = data.frame(GOterm=rownames(res),res)
+    
+    #Get GO id from GO terms
+    row=data.frame(lapply(res,as.character),stringsAsFactors = FALSE)
+    p=strsplit(row[,1], " ")
+    m=sapply(p,"[",1)
+    go_up=data.frame(GO_id=m,res)
+    go_term=go_up$GO_id
+    url= paste("http://amigo.geneontology.org/amigo/term/",go_term,sep = "") #create link to Gene Ontology Consortium
+    go_up$link=paste0("<a href='",url,"'target='_blank'>","Link to Gene Ontology Consortium","</a>")
+    go_up=as.data.frame(go_up)
+    return(go_up)
+  })
+  
+  #Print GO data in datatable
+  output$table4 = DT::renderDataTable({
+    input$ga
+    input$go_dd
+    input$gage
+    input$radio
+    input$project
+    input$contrast
+    withProgress(session = session, message = 'Generating...',detail = 'Please Wait...',{
+      isolate({
+        DT::datatable(datasetInput8(),
+                      extensions = c('Buttons','Scroller'),
+                      options = list(dom = 'Bfrtip',
+                                     searchHighlight = TRUE,
+                                     pageLength = 10,
+                                     lengthMenu = list(c(30, 50, 100, 150, 200, -1), c('30', '50', '100', '150', '200', 'All')),
+                                     scrollX = TRUE,
+                                     buttons = c('copy', 'csv','print')
+                      ),rownames=FALSE,escape=FALSE,selection = list(mode = 'single', selected =1))
+      })
+    })
+  })
+  
+  #display data in Gene ontology tab
+  observe({
+    if(input$ga>0){
+      updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'tab6')
+    }
+  })
+  
+  output$downloadgo <- downloadHandler(
+    filename = function() { paste('GO_',input$projects,'_',input$contrast,'_',input$gage,'_',input$go_dd,'.csv', sep='') },
+    content = function(file) {
+      write.csv(datasetInput8(), file)
+    })
+  
+  ###################################################
+  ###################################################
+  ############## GET GENES FROM  GO #################
+  ###################################################
+  ###################################################
+  # get GO associated genes
+  GOHeatup = reactive({
+    s = input$table4_rows_selected
+    dt = datasetInput8() #load GO data
+    dt = dt[s, , drop=FALSE] #get GO data corresponding to selected row in table
+    results=fileload()
+    pd=pData(results$eset)
+    organism=pd$organism[1]
+    prjs=c("DS_FalcorFoxA2","YT_mir302","RJ_ESC_Laminin","RJ_CardiacHdac7_updated","DS_FalcorKO")
+    prj2=c("DK_IPSC_lungepi","ZA_Boa_PKM2")
+    if(input$projects %in% prjs){
+      organism="mouse"
+    }
+    else if(input$projects %in% prj2){
+      organism="human"
+    }
+    goid=dt$GO_id
+    if(organism=="human"){
+      enterezid=paste("go.sets.hs$`",goid,"`",sep="")
+    }
+    else if(organism=="Rat"){
+      enterezid=paste("go.sets.rn$`",goid,"`",sep="")
+    }
+    else{
+      enterezid=paste("go.sets.mm$`",goid,"`",sep="")
+    }
+    entrezid=eval(parse(text=enterezid))
+    limma=datasetInput0.5()
+    lim_vals=limma[limma$ENTREZID %in% entrezid,]
+  })
+  
+  #Print datatable with gene list
+  output$x4 = DT::renderDataTable({
+    input$gage
+    input$go_dd
+    input$ga
+    input$radio
+    input$project
+    input$contrast
+    goheatup=GOHeatup()
+  },caption="Gene List",escape=FALSE)
+  
+  #Text title for gene list table
+  output$godesc <- renderText({
+    s = input$table4_rows_selected
+    dt = datasetInput8() #load GO data
+    dt = dt[s, , drop=FALSE] #get GO data corresponding to selected row in table
+    goid=dt$GO_id
+    text=paste('Gene list for GO term :',goid,sep="")
+    
+    return(text)
+  })
+  
+  output$downloadgogene <- downloadHandler(
+    filename = function() { paste('GO_',input$projects,'_',input$contrast,'_',input$gage,'_',input$go_dd,'.csv', sep='') },
+    content = function(file) {
+      write.csv(GOHeatup(), file)
+    })
+  ###################################################
+  ###################################################
+  ########## MAKE HEATMAP WITH GO ###################
+  ###################################################
+  ###################################################
+  #plot heatmap
+  goheatmapup <- function(){
+    dist2 <- function(x, ...) {as.dist(1-cor(t(x), method="pearson"))}
+    hmpcol=input$hmpcol
+    pval=GOHeatup()
+    hmplim=input$hmplim
+    top_expr=datasetInput3() 
+    top_expr=top_expr[rownames(top_expr) %in% rownames(pval),]#voom expression data of all genes corresponding to selected row in GO datatable
+    top_expr=as.data.frame(top_expr)
+    file = readexcel()
+    prj=input$projects
+    old=file$old[file$projects %in% prj]
+    old=as.character(old)
+    seq=file$seq[file$projects %in% prj]
+    seq=as.character(seq)
+    if(seq=="R"){
+      top_expr$ENSEMBL=rownames(top_expr)
+      top_expr=inner_join(top_expr,pval,by=c('ENSEMBL'='ENSEMBL'))
+      #rownames(top_expr)=top_expr$SYMBOL
+      rownames(top_expr)=make.names(top_expr$SYMBOL,unique=T)
+      if(old=="N"){
+        top_expr=top_expr %>% select(-ENSEMBL:-t)}
+      else if(old=="Y"){
+        top_expr=top_expr %>% select(-ENSEMBL:-adj.P.Val)
+      }
+    }
+    else if(seq=="M"){
+      top_expr$id=rownames(top_expr)
+      pval$id=rownames(pval)
+      top_expr=inner_join(top_expr,pval,by=c('id'='id'))
+      rownames(top_expr)=make.names(top_expr$SYMBOL,unique=T)
+      if(old=="N"){
+        top_expr=top_expr %>% select(-ENSEMBL:-t)
+      }
+      else if(old=="Y"){
+        top_expr=top_expr %>% select(-ENSEMBL:-adj.P.Val)
+      }
+    }
+    top_expr=top_expr[1:hmplim,]
+    sym=rownames(top_expr)
+    validate(
+      need(nrow(top_expr) >1 , "No results")
+    )
+    
+    if(input$hmpsamp==F){
+      contrast=input$contrast
+      contr=strsplit(contrast,"_vs_")
+      ct1=sapply(contr,"[",1)
+      ct2=sapply(contr,"[",2)
+      results=fileload()
+      pd=pData(results$eset)
+      sample=pd$sample_name[pd$maineffect %in% c(ct1,ct2)]
+      sample=as.character(sample)
+      top_expr=top_expr[,eval(sample)]}
+    
+    #Remove rows that have variance 0 (This will avoid the Na/Nan/Inf error in heatmap)
+    ind = apply(top_expr, 1, var) == 0
+    top_expr <- top_expr[!ind,]
+    
+    if(input$checkbox==TRUE){
+      d3heatmap(as.matrix(top_expr),distfun=dist2,scale="row",dendrogram=input$clusterby,xaxis_font_size = 10,colors = colorRampPalette(brewer.pal(n = 9, hmpcol))(30),labRow = sym)}
+    else{d3heatmap(as.matrix(top_expr),distfun=dist2,scale="row",dendrogram=input$clusterby,xaxis_font_size = 10,colors = colorRampPalette(rev(brewer.pal(n = 9, hmpcol)))(30),labRow = sym)}
+  }
+  
+  goheatmapupalt <- function(){
+    dist2 <- function(x, ...) {as.dist(1-cor(t(x), method="pearson"))}
+    hmpcol=input$hmpcol
+    pval=GOHeatup() #genelist from GO
+    hmplim=input$hmplim
+    top_expr=datasetInput3() 
+    top_expr=top_expr[rownames(top_expr) %in% rownames(pval),]#voom expression data of all genes corresponding to selected row in GO datatable
+    top_expr=as.data.frame(top_expr)
+    #sym=pval$SYMBOL
+    #     hmplim=input$hmplim
+    #     top_expr=datasetInput3() #voom expression data of all genes corresponding to selected row in GO datatable
+    #     top_expr=top_expr[rownames(top_expr) %in% rownames(pval),]
+    #     top_expr=as.data.frame(top_expr)
+    #     top_expr$ENSEMBL=rownames(top_expr)
+    #     top_expr=inner_join(top_expr,pval,by=c('ENSEMBL'='ENSEMBL'))
+    #     rownames(top_expr)=top_expr$SYMBOL
+    #     rownames(top_expr)=make.names(top_expr$SYMBOL,unique=T)
+    #     top_expr=top_expr %>% select(-ENSEMBL:-link)
+    file = readexcel()
+    prj=input$projects
+    old=file$old[file$projects %in% prj]
+    old=as.character(old)
+    seq=file$seq[file$projects %in% prj]
+    seq=as.character(seq)
+    if(seq=="R"){
+      top_expr$ENSEMBL=rownames(top_expr)
+      top_expr=inner_join(top_expr,pval,by=c('ENSEMBL'='ENSEMBL'))
+      #rownames(top_expr)=top_expr$SYMBOL
+      rownames(top_expr)=make.names(top_expr$SYMBOL,unique=T)
+      if(old=="N"){
+        top_expr=top_expr %>% select(-ENSEMBL:-t)}
+      else if(old=="Y"){
+        top_expr=top_expr %>% select(-ENSEMBL:-adj.P.Val)
+      }
+    }
+    else if(seq=="M"){
+      top_expr$id=rownames(top_expr)
+      pval$id=rownames(pval)
+      top_expr=inner_join(top_expr,pval,by=c('id'='id'))
+      rownames(top_expr)=make.names(top_expr$SYMBOL,unique=T)
+      if(old=="N"){
+        top_expr=top_expr %>% select(-ENSEMBL:-t)
+      }
+      else if(old=="Y"){
+        top_expr=top_expr %>% select(-ENSEMBL:-adj.P.Val)
+      }
+    }
+    top_expr=top_expr[1:hmplim,]
+    sym=rownames(top_expr)
+    validate(
+      need(nrow(top_expr) >1 , "No results")
+    )
+    if(input$hmpsamp==F){
+      contrast=input$contrast
+      contr=strsplit(contrast,"_vs_")
+      ct1=sapply(contr,"[",1)
+      ct2=sapply(contr,"[",2)
+      results=fileload()
+      pd=pData(results$eset)
+      sample=pd$sample_name[pd$maineffect %in% c(ct1,ct2)]
+      sample=as.character(sample)
+      top_expr=top_expr[,eval(sample)]}
+    #Remove rows that have variance 0 (This will avoid the Na/Nan/Inf error in heatmap)
+    ind = apply(top_expr, 1, var) == 0
+    top_expr <- top_expr[!ind,]
+    if(input$checkbox==TRUE){
+      aheatmap(as.matrix(top_expr),distfun=dist2,scale="row",Rowv=TRUE,Colv =TRUE,fontsize = 10,color = colorRampPalette(brewer.pal(n = 9, hmpcol))(30),labRow = sym)}
+    else{aheatmap(as.matrix(top_expr),distfun=dist2,scale="row",Rowv=TRUE,Colv = TRUE,fontsize = 10,color = colorRampPalette(rev(brewer.pal(n = 9, hmpcol)))(30),labRow = sym)}
+  }
+  # update heatmap tab with heatmap
+  observe({
+    s = input$table4_rows_selected
+    if(length(s)){
+      updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'tab6')
+    }
+  })
   
   
   ###################################################
@@ -1412,6 +1974,16 @@ server <- function(input, output) {
     #})
   })
   
+  
+  # update tab4 with heatmap
+  observe({
+    if(input$makeheat > 0)
+    {
+      updateTabsetPanel(session = session, inputId = 'tabvalue', selected = 'tab4')
+    }
+  })
+  
+  
   #Download heatmaps 
   output$downloadheatmap <- downloadHandler(
     filename = function(){
@@ -1450,10 +2022,7 @@ server <- function(input, output) {
       goheatmapupalt()
       dev.off()
     })
-
   
   
   
-
-  
-}#end of server
+})
