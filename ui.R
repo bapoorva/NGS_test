@@ -153,7 +153,7 @@ ui <- dashboardPage(
               ),
               
               box(width = 4, status = "primary",solidHeader = TRUE,title = "Controls",
-              selectInput("hmip", "Select Heatmap input type",c('Top number of genes' = "genenum",'Enter Genelist' = "geneli")),
+              selectInput("hmip", "Select Heatmap input type",c('Top number of genes' = "genenum",'Enter Genelist' = "geneli", 'Top Variable genes' = "vargenes")),
               selectInput("hmpcol", "Select Heatmap Color Palette",c('YlGnBu' = "YlGnBu",'RdBu' = "RdBu",'YlOrRd' = "YlOrRd",'PRGn'="PRGn", 'Blues' = "Blues")),
               selectInput("clusterby", "Cluster By",c('Both'="both",'Row' = "row",'Column' = "column",'None' = "none")),
               checkboxInput("checkbox", label = "Reverse Colors", value = FALSE),
@@ -166,8 +166,14 @@ ui <- dashboardPage(
               conditionalPanel(
                 condition = "input.hmip == 'geneli'",
                 selectInput(inputId = 'selectidentifier',label='Select Identifier',choices=list('Ensembl ID'='ensembl','Entrez Id'='entrez','Gene Symbol'='genesym')),
-                fileInput('genelistfile', 'Upload Text File',accept=c('text/csv','text/comma-separated-values,text/plain','.txt'))
+                fileInput('genelistfile', 'Upload Text File',accept=c('text/csv','text/comma-separated-values,text/plain','.txt')),
+                actionButton(inputId = 'ga', label = 'Display Results')
                 ),
+              conditionalPanel(
+                condition = "input.hmip == 'vargenes'",
+                #uiOutput("dropdown"),
+                sliderInput("vgene", label = h4("Top variable genes"), min = 2,max = 500, value = 50)
+              ),br(),
               downloadButton('downloadheatmap', 'Download')
               )#end box
               ),#end tabItem

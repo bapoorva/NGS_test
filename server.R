@@ -434,7 +434,7 @@ server <- function(input, output) {
     conditionalPanel(
       condition = "input.volcdrop == 'signi'",
       fluidRow(
-        column(6,sliderInput("volcslider", label = h4("Select top number of genes"), min = 2,max = 25, value = 5))
+        column(6,sliderInput("volcslider", label = h4("Select top number of genes"), min = 0,max = 25, value = 5))
       ))
     
   })
@@ -463,6 +463,7 @@ server <- function(input, output) {
       
       # Find and label the top peaks..
       n=input$volcslider
+      if(n>0){
       top_peaks <- diff_df[with(diff_df, order(adj.P.Val,logFC)),][1:n,]
       top_peaks <- rbind(top_peaks, diff_df[with(diff_df, order(adj.P.Val,-logFC)),][1:n,])
       
@@ -483,6 +484,10 @@ server <- function(input, output) {
       }
       p <- plot_ly(data = diff_df, x = diff_df$logFC, y = -log10(diff_df$adj.P.Val),text = diff_df$SYMBOL, mode = "markers", color = diff_df$group) %>% layout(title ="Volcano Plot",xaxis=list(title="Log Fold Change"),yaxis=list(title="-log10(FDR)")) %>%
         layout(annotations = a)
+    }
+      else{
+        p <- plot_ly(data = diff_df, x = diff_df$logFC, y = -log10(diff_df$adj.P.Val),text = diff_df$SYMBOL, mode = "markers", color = diff_df$group) %>% layout(title ="Volcano Plot",xaxis=list(title="Log Fold Change"),yaxis=list(title="-log10(FDR)"))
+      }
     }
     else if(input$volcdrop=="go"){
       top_peaks2=GOHeatup()
@@ -631,7 +636,7 @@ server <- function(input, output) {
       genesymbol=dt1$SYMBOL} #get the gene symbol of the row selected
 
     gg=ggplot(e,aes_string(x=input$color,y="signal",col=input$color2))+plotTheme+guides(color=guide_legend(title=as.character(input$color)))+
-      labs(title=genesymbol, x="Condition", y="Expression Value") + geom_point(size=5,position=position_jitter(w = 0.1))+
+      labs(title=genesymbol, x="Condition", y="Expression Value") + geom_point(size=5,position=position_jitter(w = 0.1))+ geom_smooth(method=lm,se=FALSE) +
       stat_summary(fun.y = "mean", fun.ymin = "mean", fun.ymax= "mean", size= 0.3, geom = "crossbar",width=.2)
     gg
   })
@@ -1344,7 +1349,7 @@ server <- function(input, output) {
       }
     }
     top_expr=top_expr[1:hmplim,]
-    sym=rownames(top_expr)
+    
     validate(
       need(nrow(top_expr) >1 , "No results")
     )
@@ -1364,7 +1369,7 @@ server <- function(input, output) {
     #Remove rows that have variance 0 (This will avoid the Na/Nan/Inf error in heatmap)
     ind = apply(top_expr, 1, var) == 0
     top_expr <- top_expr[!ind,]
-    
+    sym=rownames(top_expr)
     if(input$checkbox3==TRUE){
       d3heatmap(as.matrix(top_expr),distfun=dist2,scale="row",dendrogram=input$clusterby3,xaxis_font_size = 10,colors = colorRampPalette(brewer.pal(n = 9, hmpcol))(30),labRow = sym)}
     else{d3heatmap(as.matrix(top_expr),distfun=dist2,scale="row",dendrogram=input$clusterby3,xaxis_font_size = 10,colors = colorRampPalette(rev(brewer.pal(n = 9, hmpcol)))(30),labRow = sym)}
@@ -1458,6 +1463,12 @@ server <- function(input, output) {
     file=input$genelistfile
     genes=read.table(file$datapath) #get complete gene list as string
     df=as.vector(genes$V1)
+    df=tolower(df)
+    firstup <- function(x) {
+      substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+      x
+    }
+    df=firstup(df)
     results=fileload()
     pd=pData(results$eset)
     org=unique(pd$organism)
@@ -1519,7 +1530,7 @@ server <- function(input, output) {
       #       expr_vals=data.frame(expr_vals[,-c(1,(ncol(expr_vals)-1))])
     }
     
-    sym=limma[limma$ENSEMBL %in% genelist,] %>% select(ENSEMBL,SYMBOL)
+    sym=limma[limma$ENSEMBL %in% genelist,] %>% dplyr::select(ENSEMBL,SYMBOL)
     #sym=sym[,c("ENSEMBL","SYMBOL")]
     expr_vals=merge(voom,sym,by="row.names")
     rownames(expr_vals)=expr_vals$Row.names
@@ -1533,6 +1544,103 @@ server <- function(input, output) {
     #     )
     return(expr_vals)
   })
+  
+  var.genes = reactive({
+    n=as.numeric(input$vgene)
+    results=fileload()
+    v = results$eset
+    keepGenes <- v@featureData@data
+    #keepGenes <- v@featureData@data %>% filter(!(seq_name %in% c('X','Y')) & !(is.na(SYMBOL)))
+    pData<-phenoData(v)
+    v.filter = v[rownames(v@assayData$exprs) %in% rownames(keepGenes),]
+    Pvars <- apply(exprs(v.filter),1,var)
+    select <- order(Pvars, decreasing = TRUE)[seq_len(min(n,length(Pvars)))]
+    v.var <-v.filter[select,]
+    m<-exprs(v.var)
+    rownames(m) <- v.var@featureData@data$SYMBOL
+    m=as.data.frame(m)
+    m=unique(m)
+    return(m)
+  })
+  ###################################################
+  ###################################################
+  ####### TOP VARIABLE GENES  #######################
+  ###################################################
+  ###################################################
+  varheatmap <- function(){
+    dist2 <- function(x, ...) {as.dist(1-cor(t(x), method="pearson"))}
+    hmpcol=input$hmpcol #user input-color palette
+    #hmplim=input$hmplim
+    top_expr <- var.genes()
+    # results=fileload()
+    # v = results$eset
+    # keepGenes <- v@featureData@data
+    # pval <- datasetInput4()
+    # #get expression values of genes with highest pvals
+    # top_expr=expr[match(rownames(pval),rownames(expr)),]
+    validate(
+      need(nrow(top_expr) > 1, "No results")
+    )
+    if(input$hmpsamp==F){
+      contrast=input$contrast
+      contr=strsplit(contrast,"_vs_")
+      ct1=sapply(contr,"[",1)
+      ct2=sapply(contr,"[",2)
+      if(input$projects =="MoGene2_Dave"){
+        ct1="Hopx"
+        ct2="SPC"
+      }
+      results=fileload()
+      pd=pData(results$eset)
+      sample=pd$sample_name[pd$maineffect %in% c(ct1,ct2)]
+      sample=as.character(sample)
+      top_expr=top_expr[,eval(sample)]}
+    #top_expr=top_expr[1:hmplim,]
+    #sym=pval$SYMBOL
+    validate(
+      need(nrow(top_expr) > 1, "No results")
+    )
+    if(input$checkbox==TRUE){
+      d3heatmap(as.matrix(top_expr),distfun=dist2,scale="row",dendrogram=input$clusterby,xaxis_font_size = 10,colors = colorRampPalette(brewer.pal(n = 9, hmpcol))(30))}
+    else{d3heatmap(as.matrix(top_expr),distfun=dist2,scale="row",dendrogram=input$clusterby,xaxis_font_size = 10,colors = colorRampPalette(rev(brewer.pal(n = 9, hmpcol)))(30))}
+  }
+  
+  varheatmapalt <- function(){
+    dist2 <- function(x, ...) {as.dist(1-cor(t(x), method="pearson"))}
+    hmpcol=input$hmpcol #user input-color palette
+    #hmplim=input$hmplim
+    top_expr <- var.genes()
+    #pval <- datasetInput4()
+    #get expression values of genes with highest pvals
+    #top_expr=expr[match(rownames(pval),rownames(expr)),]
+    validate(
+      need(nrow(top_expr) > 1, "No results")
+    )
+    if(input$hmpsamp==F){
+      contrast=input$contrast
+      contr=strsplit(contrast,"_vs_")
+      ct1=sapply(contr,"[",1)
+      ct2=sapply(contr,"[",2)
+      results=fileload()
+      pd=pData(results$eset)
+      sample=pd$sample_name[pd$maineffect %in% c(ct1,ct2)]
+      sample=as.character(sample)
+      top_expr=top_expr[,eval(sample)]}
+    #top_expr=top_expr[1:hmplim,]
+    #sym=pval$SYMBOL
+    validate(
+      need(nrow(top_expr) > 1, "No results")
+    )
+    if(input$checkbox==TRUE){
+      aheatmap(as.matrix(top_expr),distfun=dist2,scale="row",Rowv = TRUE,Colv = TRUE,fontsize = 10,color = colorRampPalette(brewer.pal(n = 9, hmpcol))(30))}
+    else{aheatmap(as.matrix(top_expr),distfun=dist2,scale="row",Rowv = TRUE,Colv = TRUE,fontsize = 10,color = colorRampPalette(rev(brewer.pal(n = 9, hmpcol)))(30))}
+  }
+  
+  ###################################################
+  ###################################################
+  ####### ENTER GENELIST ############################
+  ###################################################
+  ###################################################
   
   #create heatmap function for gene-list given by user
   heatmap2 = function(){
@@ -1597,6 +1705,11 @@ server <- function(input, output) {
     else{aheatmap(as.matrix(expr2),distfun=dist2,scale="row",Rowv=TRUE,Colv=TRUE,fontsize = 10,color = colorRampPalette(rev(brewer.pal(n = 9, hmpcol)))(30),labRow = sym)}
   }
   
+  ###################################################
+  ###################################################
+  #################### TOP GENES ####################
+  ###################################################
+  ###################################################
   output$dropdown <- renderUI({
     radio=input$radio
     if(radio=="none"){
@@ -1645,6 +1758,7 @@ server <- function(input, output) {
     }
     return(reqd_res)
   })
+  
   
   #create heatmap function for top n genes
   heatmap <- function(){
@@ -1806,7 +1920,7 @@ server <- function(input, output) {
     input$makeheat
     input$gage
     input$go_dd
-    #input$ga
+    input$ga
     input$table4_rows_selected
     input$tablecam_rows_selected
     input$radio
@@ -1818,11 +1932,12 @@ server <- function(input, output) {
     input$lfc
     input$apval
     input$sortby
+    input$vgene
     #if user selected enter n num of genes, call heatmap() and if user entered genelist, call heatmap2()
     isolate({
       if(input$hmip == 'genenum'){heatmap()}
       else if(input$hmip == 'geneli'){heatmap2()}
-      #else if(input$hmip == 'hmpcam' ){camheatmap()}
+      else if(input$hmip == 'vargenes' ){varheatmap()}
       #else if(input$hmip == 'hmpgo'){goheatmapup()}
     })
   })
@@ -1893,7 +2008,7 @@ server <- function(input, output) {
       jpeg(file, quality = 100, width = 800, height = 1300)
       if(input$hmip == 'genenum'){heatmapalt()}
       else if(input$hmip == 'geneli'){heatmap2alt()}
-      #       else if(input$hmip == 'hmpcam' ){camheatmapalt()}
+             else if(input$hmip == 'vargenes' ){varheatmapalt()}
       #       else if(input$hmip == 'hmpgo'){goheatmapupalt()}
       dev.off()
     })
