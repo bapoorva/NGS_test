@@ -37,10 +37,7 @@ ui <- dashboardPage(
                           ),
               sidebarMenu(
                 menuItem('View Raw Expression Data', tabName = 'voom', icon = icon('hand-o-right')),
-<<<<<<< HEAD
                 menuItem('View Sample Data', tabName = 'phenofile', icon = icon('hand-o-right')),
-=======
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
                   menuItem('Generate Heatmap', tabName = 'heatmap', icon = icon('hand-o-right')),
                   menuItem('GSEA Using Camera', tabName = 'cam', icon = icon('hand-o-right'),
                            menuSubItem('View Camera results', tabName = 'camera'),
@@ -49,14 +46,9 @@ ui <- dashboardPage(
                   menuItem('GO Analysis uisng GAGE', icon = icon('hand-o-right'),
                            menuSubItem('GAGE Results', tabName = 'gogage')
                            )
-<<<<<<< HEAD
                         ),#end of sidebar menu
               sidebarMenu(
                 menuItem("Help Page", tabName = "help", icon = icon("hand-o-right")))
-=======
-)#end of sidebar menu
-    
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
       ),#end dashboardSidebar
   
   
@@ -78,12 +70,8 @@ ui <- dashboardPage(
                 fluidRow(
                   column(6,uiOutput("pcipslide")),
                   column(6,uiOutput("pcslide"))
-<<<<<<< HEAD
                 ),br(),
                 uiOutput("ellipse")),
-=======
-                ),br()),
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
                 box(
                   width = 10, status = "primary",solidHeader = TRUE,
                   title = "PCA Plot",
@@ -119,10 +107,7 @@ ui <- dashboardPage(
               ),
               fluidRow(
                 column(6,plotOutput('dotplot',width = 800))
-<<<<<<< HEAD
                 #column(6,plotOutput('dotplot',width = 'auto'))
-=======
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
               )),
               box(width = 4, status = "primary",solidHeader = TRUE,title = "Gene Selection",
                   radioButtons("radio", label = h4("Gene Selection"),
@@ -157,13 +142,10 @@ ui <- dashboardPage(
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-<<<<<<< HEAD
       tabItem(tabName = "phenofile",DT::dataTableOutput('phenofile')),
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-=======
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
       tabItem(tabName = "heatmap",
               box(width = 8, status = "primary",solidHeader = TRUE,title = "Heatmap",
                   textOutput("htitle"),br(),
@@ -274,16 +256,11 @@ ui <- dashboardPage(
               
               
               
-<<<<<<< HEAD
       ),
-=======
-      )
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
       
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-<<<<<<< HEAD
       tabItem(tabName = "help",
               h4(p(strong("1. PCA Plot"))),
               h4(p(div("The PCA plot tab displays the biplot by default. You can select the principle component to plot on the x and y axis of the plot from the drop-down menu. You can also specify the number of top genes showing maximum variance to be used as the input for the bioplot as well as the number of genes you want to view in the plot. The ",em("Display variances of PC"),"tab displays the barplot showing the proportion of variance retained by each principle component.","The ",em("3D plot tab"),"displays the 3D plot of the top 3 principle components"))),
@@ -334,23 +311,6 @@ ui <- dashboardPage(
               h4(p(div("Click on",strong("Download GO Data"),"button to download the table as a csv file,",strong("Download GO Genelist")," for the genes associated with each GO category and ",strong("Download GO Heatmap")," for the heatmap associated with each GO term"))),
               h4("Helpful Links:", a("Click Here for information on GAGE", href="http://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-10-161"))
       )
-=======
-#      tabItem(tabName = "gogage",
-#               fluidRow(
-#                 box(width = 4, status = "primary",solidHeader = TRUE,title = "Options",
-#                   fluidRow(
-#                     column(6,uiOutput('hmplimgo')),
-#                     column(width = 3, offset = 2,plotOutput('hmpscale_out3',width = 200,height = 65))
-#                   ),
-#                   fluidRow(
-#                     column(6,uiOutput('hmpsamp3')),
-#                     column(6,h4(""))
-#                   ),
-#                   d3heatmapOutput('goheatmap',width=550,height=900),
-#                   DT::dataTableOutput('table4'),textOutput("godesc"),DT::dataTableOutput('x4'))
-#                 )
-#               )
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

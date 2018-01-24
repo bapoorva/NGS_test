@@ -105,13 +105,10 @@ server <- function(input, output) {
     selectInput("pcayaxes","Select Principle Component to plot on the Y-axis",c(1:10),selected=2)
   })
   
-<<<<<<< HEAD
   output$ellipse <- renderUI({
     checkboxInput("ellipse", label = "Check to view ellipses", value = FALSE)
   })
   
-=======
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
   output$biplottitle <- renderText({
     pcaxaxes=input$pcaxaxes
     pcayaxes=input$pcayaxes
@@ -129,17 +126,12 @@ server <- function(input, output) {
     validate(
       need(input$pcslide, "Enter number of genes to view in biplot")
     )
-<<<<<<< HEAD
     if(input$pcslide==0 & input$ellipse==F){
-=======
-    if(input$pcslide==0){
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
       fviz_pca_ind(res.pca, repel=T,geom='point',label='var',addEllipses=FALSE, habillage = as.factor(pData$maineffect),pointsize = 3.35,axes=c(x,y))+scale_shape_manual(values = c(rep(19,length(unique(pData$maineffect)))))+theme(axis.title.x = element_text(face="bold", size=14),
                                                                                                                                                                                                                           axis.title.y = element_text(face="bold", size=14),
                                                                                                                                                                                                                           legend.text  = element_text(angle=0, vjust=0.5, size=14),
                                                                                                                                                                                                                           legend.title  = element_text(angle=0, vjust=0.5, size=14),
                                                                                                                                                                                                                           plot.title  = element_text(angle=0, vjust=0.5, size=16))
-<<<<<<< HEAD
     }
     else if(input$pcslide==0 & input$ellipse==T){
         fviz_pca_ind(res.pca, repel=T,geom='point',label='var',addEllipses=T,ellipse.type="confidence",ellipse.alpha=0.2, habillage = as.factor(pData$maineffect),pointsize = 3.35,axes=c(x,y))+scale_shape_manual(values = c(rep(19,length(unique(pData$maineffect)))))+theme(axis.title.x = element_text(face="bold", size=14),
@@ -164,16 +156,6 @@ server <- function(input, output) {
                                                                                                                                                                                                                                                                            legend.title  = element_text(angle=0, vjust=0.5, size=14),
                                                                                                                                                                                                                                                                            plot.title  = element_text(angle=0, vjust=0.5, size=16))
     }
-=======
-      
-    }
-    #fviz_pca_ind(res.pca, geom = c("point", "text"))}
-    else{fviz_pca_biplot(res.pca,repel=T, label=c("var","ind"),habillage = as.factor(pData$maineffect),pointsize = 3.35,axes=c(x,y),select.var = list(contrib = as.numeric(input$pcslide)))+scale_shape_manual(values = c(rep(19,length(unique(pData$maineffect)))))+theme(axis.title.x = element_text(face="bold", size=14),
-                                                                                                                                                                                                                                                                           axis.title.y = element_text(face="bold", size=14),
-                                                                                                                                                                                                                                                                           legend.text  = element_text(angle=0, vjust=0.5, size=14),
-                                                                                                                                                                                                                                                                           legend.title  = element_text(angle=0, vjust=0.5, size=14),
-                                                                                                                                                                                                                                                                           plot.title  = element_text(angle=0, vjust=0.5, size=16))}
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
   })
   
   output$biplot = renderPlot({
@@ -255,11 +237,8 @@ server <- function(input, output) {
   ###################################################
   ###################################################
   output$pcaplot3d = renderRglwidget({
-<<<<<<< HEAD
     graphics.off()
     pdf(NULL)
-=======
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
     v=datasetInput3()
     results=fileload()
     pData=pData(results$eset)
@@ -269,10 +248,7 @@ server <- function(input, output) {
     #      vars <- apply(pca$x, 2, var)
     #      props <- round((vars / sum(vars))*100,1)
     #      groups=factor(gsub('-','_',pData$maineffect))
-<<<<<<< HEAD
-=======
     
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
     pca <- res_pca()
     vars <- apply(pca$var$coord, 2, var)
     props <- round((vars / sum(vars))*100,1)
@@ -280,16 +256,12 @@ server <- function(input, output) {
     
     
     ########
-<<<<<<< HEAD
-    #try(rgl.close())
-=======
     try(rgl.close())
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
     open3d()
     # resize window
     par3d(windowRect = c(100, 100, 612, 612))
     palette(c('blue','red','green','orange','cyan','black','brown','pink'))
-    plot3d(pca$ind$coord[,1:3], col =as.numeric(groups), type='s',alpha=.75,axes=F,
+    plot3d(pca$ind$coord[,1:3], col =as.numeric(groups), type='s',alpha=1.75,axes=F,
            xlab=paste('PC1 (',props[1],'%)',sep=''),
            ylab=paste('PC2 (',props[2],'%)',sep=''),
            zlab=paste('PC3 (',props[3],'%)',sep='')
@@ -301,21 +273,12 @@ server <- function(input, output) {
     l=length(levels(groups))
     ll=1:l
     y=1+(ll*15)
-<<<<<<< HEAD
     #text3d(x=70, y=y, z=0.75,levels(groups) ,col="black")
     #points3d(x=90, y=y, z=0.75, col=as.numeric(as.factor(levels(groups))), size=6)
     legend3d("topright", legend = levels(groups), pch = 16, col=palette(),cex=1, inset=c(0.02))
-    
+        #pdf(NULL)
         #rgl.snapshot('./PCA_3d_test.png', fmt = "png", top = TRUE )
         #rgl.postscript('PCA_3D_test.pdf',fmt='pdf')
-=======
-    text3d(x=70, y=y, z=0.75,levels(groups) ,col="black")
-    points3d(x=90, y=y, z=0.75, col=as.numeric(as.factor(levels(groups))), size=6)
-    legend3d("topright", legend = levels(groups), pch = 16, col=palette(),cex=1, inset=c(0.02))
-    
-    #      rgl.snapshot('PCA_3d_test.png', fmt = "png", top = TRUE )
-    #      rgl.postscript('PCA_3D_test.pdf',fmt='pdf')
->>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
     
     #movie3d(spin3d(), duration = 5,movie='PCA_movie',dir='./' )
     rglwidget()
