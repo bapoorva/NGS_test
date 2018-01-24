@@ -37,6 +37,10 @@ ui <- dashboardPage(
                           ),
               sidebarMenu(
                 menuItem('View Raw Expression Data', tabName = 'voom', icon = icon('hand-o-right')),
+<<<<<<< HEAD
+                menuItem('View Sample Data', tabName = 'phenofile', icon = icon('hand-o-right')),
+=======
+>>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
                   menuItem('Generate Heatmap', tabName = 'heatmap', icon = icon('hand-o-right')),
                   menuItem('GSEA Using Camera', tabName = 'cam', icon = icon('hand-o-right'),
                            menuSubItem('View Camera results', tabName = 'camera'),
@@ -45,8 +49,14 @@ ui <- dashboardPage(
                   menuItem('GO Analysis uisng GAGE', icon = icon('hand-o-right'),
                            menuSubItem('GAGE Results', tabName = 'gogage')
                            )
+<<<<<<< HEAD
+                        ),#end of sidebar menu
+              sidebarMenu(
+                menuItem("Help Page", tabName = "help", icon = icon("hand-o-right")))
+=======
 )#end of sidebar menu
     
+>>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
       ),#end dashboardSidebar
   
   
@@ -68,7 +78,12 @@ ui <- dashboardPage(
                 fluidRow(
                   column(6,uiOutput("pcipslide")),
                   column(6,uiOutput("pcslide"))
+<<<<<<< HEAD
+                ),br(),
+                uiOutput("ellipse")),
+=======
                 ),br()),
+>>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
                 box(
                   width = 10, status = "primary",solidHeader = TRUE,
                   title = "PCA Plot",
@@ -104,6 +119,10 @@ ui <- dashboardPage(
               ),
               fluidRow(
                 column(6,plotOutput('dotplot',width = 800))
+<<<<<<< HEAD
+                #column(6,plotOutput('dotplot',width = 'auto'))
+=======
+>>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
               )),
               box(width = 4, status = "primary",solidHeader = TRUE,title = "Gene Selection",
                   radioButtons("radio", label = h4("Gene Selection"),
@@ -138,6 +157,13 @@ ui <- dashboardPage(
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+<<<<<<< HEAD
+      tabItem(tabName = "phenofile",DT::dataTableOutput('phenofile')),
+      #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+      #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+      #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+=======
+>>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
       tabItem(tabName = "heatmap",
               box(width = 8, status = "primary",solidHeader = TRUE,title = "Heatmap",
                   textOutput("htitle"),br(),
@@ -248,11 +274,67 @@ ui <- dashboardPage(
               
               
               
+<<<<<<< HEAD
+      ),
+=======
       )
+>>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
       
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+<<<<<<< HEAD
+      tabItem(tabName = "help",
+              h4(p(strong("1. PCA Plot"))),
+              h4(p(div("The PCA plot tab displays the biplot by default. You can select the principle component to plot on the x and y axis of the plot from the drop-down menu. You can also specify the number of top genes showing maximum variance to be used as the input for the bioplot as well as the number of genes you want to view in the plot. The ",em("Display variances of PC"),"tab displays the barplot showing the proportion of variance retained by each principle component.","The ",em("3D plot tab"),"displays the 3D plot of the top 3 principle components"))),
+              h4("Helpful Links:", a("Click Here for information on PCA biplot", href="http://www.nature.com/nbt/journal/v26/n3/full/nbt0308-303.html")),
+              br(),
+              h4(p(strong("2. Project Summary and Results"))),
+              h4("Select a project and a comparison. (Comparisons are automatically populated in the drop-down menu)"),
+              h4(p(div(span("The Project Summary and Results tab",style="color:blue"), "will display the limma (differential expression analysis) output for that comparison in a  table. Clicking on any row will display the dot plot for that gene. Select an Attribute from the drop-dowm menu near the dot-plot to color the plot by that feature."))),
+      
+              h4("Make a Gene Selection by selecting the radio button to view the list of upregulated and/or downregulated genes in the ", span("Results tab",style="color:blue")),   
+              h4(p(div("Type in the Fold Change cutoff and Adjusted PValue cutoff and view the updated table in the same tab. Click on",em("Download Data"),"button to download the table as a csv file"))),
+              h4(p(div(span("Note:Make sure the radio button 'None' is not selected when setting FC and P.Value cutoffs",style="color:red")))),
+              h4(p(div(span("Click on",em("View volcano plot"),"for the volcano plot.You can adjust the input type and the number of genes to display on the plot")))),
+              h4(p(div(span("Click on",em("View Limma results of multiple contrasts")," and select",em("Display Contrast list") ,"checkbox to view the foldchange and adjusted pvalues of multiple comparisons")))),
+              br(),
+              h4(p(strong("3. Raw Expression Data"))),
+              h4("Click on the", em("Click to view the Raw expression data"),"button to view the expression data in the",span("Raw Data tab",style="color:blue")),
+              br(),
+               h4(p(strong("4. Heatmap"))),
+              h4("Select Heatmap type from drop-down menu and give appropriate inputs to view the Heatmap in the",span("Generate Heatmap tab",style="color:blue")),
+              h4(p(div("Select color using the",em("Heatmap color palette"),"dropdown and reverse color palette using the",em("Reverse Colors"),"checkbox. Cluster by Rows and/or columns or none by selecting the option from the",em("Cluster By"),"drop-down menu"))),
+              h4(p(div("Use the",em("Slider"),"to select number of genes if Heatmap type selected is 'Top number of genes'.Default is 50, minimum is 2 and maximum is 500"))),
+              h4(p(div(span("Note:If the limma table has fewer genes, the heatmap will display only those despite the slider value",style="color:red")))),
+              h4(p(div("You can also choose to view the heatmap of all the samples and not the samples associated with the selected contrast by unchecking the ",em("View Heatmap of all samples"),"checkbox"))),
+              br(),
+              h4(p(div("Upload a text file with one gene in each row if the Heatmap type selected is 'Enter Genelist'."))),
+              h4(p(div(span("Note:Make sure you select the correct identifier from the drop down menu (ENSEMBL ID, ENTREZ ID, Gene Symbol)",style="color:red")))),
+              h4(p(div("Generate Camera and GO data to view the heatmap if the Heatmap type selected is 'Heatmap from Camera' or 'Heatmap from GO'."))),
+              br(),
+              h4(p(div("You can also view a heatmap of the most variable genes from the PCA"))),
+              br(),
+              h4(p(strong("5. GSEA using Camera"))),
+              #h4("Click on",strong("Click to view Camera results"),"button to view Camera results in the",span("GSEA tab",style="color:blue")),
+              h4(p(div("Select a gene set from the ",strong("Select a Gene Set")," dropdown"))),
+              h4(p(div("The Camera function in the limma package for testing differential expression, tests whether a set of genes is highly ranked relative to other genes in terms of differential expression. It takes into account the inter-gene correlation.CAMERA, an acronym for Correlation Adjusted MEan RAnk gene set test, is based on the idea of estimating the variance inflation factor associated with inter-gene correlation, and incorporating this into parametric or rank-based test procedures. It returns the number of genes in the set, the inter-gene correlation value, the direction of change (Up or Down), the two-tailed p-value and the Benjamini & Hochberg FDR adjusted P-value"))),
+              h4(p(div(span("The GSEA using Camera tab",style="color:blue"), "will display the Camera output in a table. Clicking on any row will display the gene list from the user dataset that belongs to that Gene set category in table below it and the heatmap of those genes above the camera results table."))),
+              #h4(p(div("Click on",em("Download Camera Data"),"button to download the table as a csv file"))),
+              h4("Helpful Links:", a("Click Here for for information on Camera", href="http://nar.oxfordjournals.org/content/early/2012/05/24/nar.gks461.full")),
+              br(),
+              h4(p(strong("6. Pathway Analysis using SPIA"))),
+              h4("The",span("Pathway Analysis using SPIA tab",style="color:blue"),"displays the SPIA results"),
+              h4("Helpful Links: Click", a("here", href="http://www.bioconductor.org/packages/release/bioc/vignettes/SPIA/inst/doc/SPIA.pdf"),"and",a("here", href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1987343/"),"for information on SPIA"),
+              br(),
+              h4(p(strong("7. Gene Ontology using GAGE"))),
+              h4("The default Ontology is set to Biological process. click on the",strong("GAGE Results"),"button in the sidebar to view GAGE results."),
+              h4(p(div(span("The GO Analysis Using GAGE tab",style="color:blue"), "will display the GO output for that ontology in a table. Clicking on any row will display the gene list from the user dataset that belong to that GO-term in table below it and the heatmap correspoding to the genelist above the GAGE results table."))),
+              
+              h4(p(div("Click on",strong("Download GO Data"),"button to download the table as a csv file,",strong("Download GO Genelist")," for the genes associated with each GO category and ",strong("Download GO Heatmap")," for the heatmap associated with each GO term"))),
+              h4("Helpful Links:", a("Click Here for information on GAGE", href="http://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-10-161"))
+      )
+=======
 #      tabItem(tabName = "gogage",
 #               fluidRow(
 #                 box(width = 4, status = "primary",solidHeader = TRUE,title = "Options",
@@ -268,6 +350,7 @@ ui <- dashboardPage(
 #                   DT::dataTableOutput('table4'),textOutput("godesc"),DT::dataTableOutput('x4'))
 #                 )
 #               )
+>>>>>>> 75d90cebc114fe8e0b93d419ae4bdd8596248d36
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
