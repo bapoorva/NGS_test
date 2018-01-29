@@ -205,7 +205,9 @@ ui <- dashboardPage(
               box(width = 4, status = "primary",solidHeader = TRUE,title = "Controls",
                   selectInput("hmpcol2", "Select Heatmap Color Palette",c('YlGnBu' = "YlGnBu",'RdBu' = "RdBu",'YlOrRd' = "YlOrRd",'PRGn'="PRGn", 'Blues' = "Blues")),
                   selectInput("clusterby2", "Cluster By",c('Both'="both",'Row' = "row",'Column' = "column",'None' = "none")),
-                  checkboxInput("checkbox2", label = "Reverse Colors", value = FALSE))),
+                  checkboxInput("checkbox2", label = "Reverse Colors", value = FALSE),
+              br(),
+              downloadButton('downloadcamheatmap', 'Download Heatmap'))),
               box(width = 12, status = "primary",solidHeader = TRUE,title = "Table",
               DT::dataTableOutput('tablecam'),textOutput("camdesc"),DT::dataTableOutput('campick3'))
               
