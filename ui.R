@@ -43,7 +43,7 @@ ui <- dashboardPage(
                            menuSubItem('View Camera results', tabName = 'camera'),
                            menuSubItem(icon=NULL,uiOutput("cameradd"))),
                   menuItem('Pathway Analysis using SPIA', tabName = 'spia', icon = icon('hand-o-right')),
-                  menuItem('GO Analysis uisng GAGE', icon = icon('hand-o-right'),
+                  menuItem('GO Analysis using GAGE', icon = icon('hand-o-right'),
                            menuSubItem('GAGE Results', tabName = 'gogage')
                            )
                         ),#end of sidebar menu
