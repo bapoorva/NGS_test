@@ -914,6 +914,8 @@ server <- function(input, output) {
     if(seq=="R"){
       expr$ENSEMBL=rownames(expr)
       expr=inner_join(expr,pval,by=c('ENSEMBL'='ENSEMBL'))
+      
+      expr=expr[order(expr$adj.P.Val),]
       rownames(expr)=make.names(expr$SYMBOL,unique=T)
       if(old=="N"){
         expr=expr %>% dplyr::select(-ENSEMBL:-t)}
@@ -925,6 +927,7 @@ server <- function(input, output) {
       expr$id=rownames(expr)
       pval$id=rownames(pval)
       expr=inner_join(expr,pval,by=c('id'='id'))
+      expr=expr[order(expr$adj.P.Val),]
       rownames(expr)=make.names(expr$SYMBOL,unique=T)
       if(old=="N"){
         expr=expr %>% dplyr::select(-ENSEMBL:-t)
@@ -1014,6 +1017,7 @@ server <- function(input, output) {
     #             top_expr=data.frame(expr)}
     #           else{
     top_expr=data.frame(expr)
+    top_expr=top_expr[order(top_expr$adj.P.Val),]
     top_expr=top_expr[1:hmplim,]
     validate(
       need(nrow(top_expr)>1, "No results")
@@ -1395,6 +1399,7 @@ server <- function(input, output) {
         top_expr=top_expr %>% dplyr::select(-ENSEMBL:-adj.P.Val)
       }
     }
+    top_expr=top_expr[order(top_expr$adj.P.Val),]
     top_expr=top_expr[1:hmplim,]
     
     validate(
@@ -1471,6 +1476,7 @@ server <- function(input, output) {
         top_expr=top_expr %>% dplyr::select(-ENSEMBL:-adj.P.Val)
       }
     }
+    top_expr=top_expr[order(top_expr$adj.P.Val),]
     top_expr=top_expr[1:hmplim,]
     sym=rownames(top_expr)
     validate(
