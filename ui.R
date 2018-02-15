@@ -131,7 +131,7 @@ ui <- dashboardPage(
                  column(width = 3, offset = 2,uiOutput("volcdrop")),
                  column(width =4, offset = 2,uiOutput("volcslider"))
                ),br(),DT::dataTableOutput('table_volc')),
-      tabItem(tabName = "multilimma",DT::dataTableOutput('table_TRUE')),
+      tabItem(tabName = "multilimma",DT::dataTableOutput('table_TRUE'),fluidRow(uiOutput("dwldmultitab"))),
       
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

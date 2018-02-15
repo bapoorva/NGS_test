@@ -366,7 +366,7 @@ server <- function(input, output) {
     DT::datatable(datasetInput(),
                   extensions = 'Buttons', options = list(
                     dom = 'Bfrtip',
-                    buttons = list('copy')),
+                    buttons = list()),
                   rownames=FALSE,selection = list(mode = 'single', selected =1),escape=FALSE)
   })
   
@@ -434,11 +434,20 @@ server <- function(input, output) {
                                  pageLength = 10,
                                  lengthMenu = list(c(30, 50, 100, 150, 200, -1), c('30', '50', '100', '150', '200', 'All')),
                                  scrollX = TRUE,
-                                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+                                 buttons = list('copy')
                   ),rownames=TRUE,selection = list(mode = 'single', selected =1),escape=FALSE)
   })
   
 
+  output$dwldmultitab = renderUI({
+    downloadButton('multidwld','Download Table')
+  }) 
+  
+  output$multidwld <- downloadHandler(
+    filename = function() { paste(input$projects, '_multiple_contrasts.csv', sep='') },
+    content = function(file) {
+      write.csv(multilimma(), file,row.names=FALSE)
+    })
   ###################################################
   ###################################################
   ############# DISPLAY VOLCANO PLOT  ###############
@@ -757,7 +766,7 @@ server <- function(input, output) {
                                    pageLength = 10,
                                    lengthMenu = list(c(30, 50, 100, 150, 200, -1), c('30', '50', '100', '150', '200', 'All')),
                                    scrollX = TRUE,
-                                   buttons = c('copy', 'csv', 'print')
+                                   buttons = c('copy', 'print')
                     ),rownames= FALSE,selection = list(mode = 'single', selected =1),escape=FALSE,caption = "Camera Results")
     })
   })
@@ -807,7 +816,7 @@ server <- function(input, output) {
                                  pageLength = 10,
                                  lengthMenu = list(c(30, 50, 100, 150, 200, -1), c('30', '50', '100', '150', '200', 'All')),
                                  scrollX = TRUE,
-                                 buttons = c('copy', 'csv', 'print')
+                                 buttons = c('copy', 'print')
                   ),rownames=FALSE,escape=FALSE,caption="GENE LIST")
   })
   
@@ -849,7 +858,7 @@ server <- function(input, output) {
                                  pageLength = 10,
                                  lengthMenu = list(c(30, 50, 100, 150, 200, -1), c('30', '50', '100', '150', '200', 'All')),
                                  scrollX = TRUE,
-                                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+                                 buttons = c('copy', 'print')
                   ),rownames=FALSE,escape=FALSE,selection = list(mode = 'single', selected =1))
   })
   
@@ -1088,7 +1097,7 @@ server <- function(input, output) {
                         pageLength = 10,
                         lengthMenu = list(c(5, 10, 15, 20, 25, -1), c('5', '10', '15', '20', '25', 'All')),
                         scrollX = TRUE,
-                        buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+                        buttons = c('copy', 'print')
                       ),rownames=FALSE)
     #  })
     })
@@ -1126,7 +1135,7 @@ server <- function(input, output) {
                                  pageLength = 10,
                                  lengthMenu = list(c(30, 50, 100, 150, 200, -1), c('30', '50', '100', '150', '200', 'All')),
                                  scrollX = TRUE,
-                                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+                                 buttons = c('copy', 'print')
                   ),rownames=FALSE,escape=FALSE,selection = list(mode = 'single', selected =1,caption="Genelist"))
   })
   
@@ -1278,7 +1287,7 @@ server <- function(input, output) {
                                      pageLength = 10,
                                      lengthMenu = list(c(30, 50, 100, 150, 200, -1), c('30', '50', '100', '150', '200', 'All')),
                                      scrollX = TRUE,
-                                     buttons = c('copy', 'csv','print')
+                                     buttons = c('copy','print')
                       ),rownames=FALSE,escape=FALSE,selection = list(mode = 'single', selected =1))
     #  })
     })
