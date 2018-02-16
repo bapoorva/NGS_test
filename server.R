@@ -629,6 +629,10 @@ server <- function(input, output) {
   phenofile = reactive({
     results=fileload()
     pd=pData(results$eset)
+    if("minexpr" %in% colnames(pData)){
+      pd=pd %>% dplyr::select(-minexpr)
+    }
+    else{pd=pd}
   })
   
   #print pheno data file 
@@ -673,6 +677,13 @@ server <- function(input, output) {
     selectInput("color2","Color By",bpcols) #populate drop down menu with the phenodata columns
   })
  
+  output$minexprline = renderUI({ 
+    tagList(
+  checkboxInput("minexprline", label = "Show expression threshold line", value = FALSE),
+    bsTooltip("minexprline","Please note that not all projects have this option currently", placement = "bottom", trigger = "hover",options = NULL)
+    )
+  })
+  
   dotplot_out = reactive({
     s = input$table_rows_selected #select rows from table
     dt = datasetInput() #load limma data
@@ -685,15 +696,22 @@ server <- function(input, output) {
     id = as.character(dt[s,1]) 
     results=fileload()
     eset <- results$eset
+    pData=pData(eset) #get pheno-data
+    minexpr=pData$minexpr[1]
     e <-data.frame(eset@phenoData@data,signal=exprs(eset)[id,])
     if(is.na(dt1$SYMBOL)) #if gene symbol does not exist,use ENSEMBL id
     {genesymbol=dt1$ENSEMBL}
     else{
       genesymbol=dt1$SYMBOL} #get the gene symbol of the row selected
-
+    if(input$minexprline==T){
     gg=ggplot(e,aes_string(x=input$color,y="signal",col=input$color2))+plotTheme+guides(color=guide_legend(title=as.character(input$color)))+
       labs(title=genesymbol, x="Condition", y="Expression Value") + geom_point(size=5,position=position_jitter(w = 0.1))+ geom_smooth(method=lm,se=FALSE) +
-      stat_summary(fun.y = "mean", fun.ymin = "mean", fun.ymax= "mean", size= 0.3, geom = "crossbar",width=.2)
+      stat_summary(fun.y = "mean", fun.ymin = "mean", fun.ymax= "mean", size= 0.3, geom = "crossbar",width=.2) + geom_hline(yintercept=minexpr, linetype="dashed", color = "red")}
+    else{
+      gg=ggplot(e,aes_string(x=input$color,y="signal",col=input$color2))+plotTheme+guides(color=guide_legend(title=as.character(input$color)))+
+        labs(title=genesymbol, x="Condition", y="Expression Value") + geom_point(size=5,position=position_jitter(w = 0.1))+ geom_smooth(method=lm,se=FALSE) +
+        stat_summary(fun.y = "mean", fun.ymin = "mean", fun.ymax= "mean", size= 0.3, geom = "crossbar",width=.2)
+    }
     gg
   })
   

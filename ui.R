@@ -105,6 +105,7 @@ ui <- dashboardPage(
                 column(6,uiOutput("boxplotcol")),
                 column(6,uiOutput("boxplotcol2"))
               ),
+              uiOutput("minexprline"),
               fluidRow(
                 column(6,plotOutput('dotplot',width = 800))
                 #column(6,plotOutput('dotplot',width = 'auto'))
