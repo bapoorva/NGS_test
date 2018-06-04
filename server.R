@@ -40,8 +40,62 @@ plotTheme <-theme_bw() + theme(axis.title.x = element_text(face="bold", size=12)
                                axis.title.y = element_text(face="bold", size=12),
                                axis.text.y  = element_text(angle=0, vjust=0.5, size=12))
 
+my_username <- c("Morriseylab","ZARJ")
+my_password <- c("edmorrisey123","ZARJ123")
+
 server <- function(input, output) {
 
+  # values <- reactiveValues(authenticated = FALSE)
+  # 
+  # # Return the UI for a modal dialog with data selection input. If 'failed'
+  # # is TRUE, then display a message that the previous value was invalid.
+  # dataModal <- function(failed = FALSE) {
+  #   modalDialog(
+  #     textInput("username", "Username:"),
+  #     passwordInput("password", "Password:"),
+  #     footer = tagList(
+  #       # modalButton("Cancel"),
+  #       actionButton("ok", "OK")
+  #     )
+  #   )
+  # }
+  # 
+  # # Show modal when button is clicked.
+  # # This `observe` is suspended only whith right user credential
+  # 
+  # obs1 <- observe({
+  #   showModal(dataModal())
+  # })
+  # 
+  # # When OK button is pressed, attempt to authenticate. If successful,
+  # # remove the modal.
+  # 
+  # obs2 <- observe({
+  #   req(input$ok)
+  #   isolate({
+  #     Username <- input$username
+  #     Password <- input$password
+  #   })
+  #   Id.username <- which(my_username == Username)
+  #   Id.password <- which(my_password == Password)
+  #   if (length(Id.username) > 0 & length(Id.password) > 0) {
+  #     if (Id.username == Id.password) {
+  #       Logged <<- TRUE
+  #       values$authenticated <- TRUE
+  #       obs1$suspend()
+  #       removeModal()
+  #       
+  #     } else {
+  #       values$authenticated <- FALSE
+  #     }
+  #   }
+  # })
+  # 
+  # 
+  # # output$dataInfo <- renderPrint({
+  # #   if (values$authenticated) "OK!!!!!"
+  # #   else "You are NOT authenticated"
+  # # })
   ###################################################
   ###################################################
   ####### LOAD EXCEL AND POPULATE DROP DOWN #########
@@ -50,7 +104,9 @@ server <- function(input, output) {
   
   #Read the parameter file
   readexcel = reactive({
-    file = read.csv("data/param.csv")
+    #user=input$username
+    file = read.csv(paste("data/param.csv",sep=""))
+    #file = read.csv(paste("data/",user,"_param.csv",sep=""))
   })
   
   #Get Project list and populate drop-down
@@ -199,10 +255,10 @@ server <- function(input, output) {
     #keepGenes <- v@featureData@data %>% filter(!(seq_name %in% c('X','Y')) & !(is.na(SYMBOL)))
     pData<-phenoData(v)
     v.filter = v[rownames(v@assayData$exprs) %in% rownames(keepGenes),]
-    Pvars <- apply(exprs(v.filter),1,var)
+    Pvars <- apply(v.filter@assayData$exprs,1,var)
     select <- order(Pvars, decreasing = TRUE)[seq_len(min(n,length(Pvars)))]
     v.var <-v.filter[select,]
-    m<-exprs(v.var)
+    m<-v.var@assayData$exprs
     rownames(m) <- v.var@featureData@data$SYMBOL
     m=as.data.frame(m)
     m=unique(m)
@@ -583,13 +639,13 @@ server <- function(input, output) {
   #load voom data from eset
   datasetInput3 = reactive({
     results=fileload()
-    exprsdata=exprs(results$eset)
+    exprsdata=results$eset@assayData$exprs
   })
   
   #annotate voom data using featuresdata 
   datasetInput33 = reactive({
     results=fileload()
-    exprsdata=as.data.frame(exprs(results$eset))
+    exprsdata=as.data.frame(results$eset@assayData$exprs)
     features=as.data.frame(pData(featureData(results$eset)))
     features$id=rownames(features)
     exprsdata$id=rownames(exprsdata)
@@ -698,7 +754,7 @@ server <- function(input, output) {
     eset <- results$eset
     pData=pData(eset) #get pheno-data
     minexpr=pData$minexpr[1]
-    e <-data.frame(eset@phenoData@data,signal=exprs(eset)[id,])
+    e <-data.frame(eset@phenoData@data,signal=eset@assayData$exprs[id,])
     if(is.na(dt1$SYMBOL)) #if gene symbol does not exist,use ENSEMBL id
     {genesymbol=dt1$ENSEMBL}
     else{
@@ -969,8 +1025,8 @@ server <- function(input, output) {
     validate(
       need(nrow(top_expr)>1, "No results")
     )
-    samples=as.character(pd$sample_name)
-    top_expr=top_expr[,eval(samples)]
+    samples=as.character(rownames(pd))
+    top_expr=top_expr %>% dplyr::select(samples)
     if(input$hmpsamp2==F){
       contrast=input$contrast
       contr=strsplit(contrast,"_vs_")
@@ -1434,8 +1490,8 @@ server <- function(input, output) {
     validate(
       need(nrow(top_expr) >1 , "No results")
     )
-    samples=as.character(pd$sample_name)
-    top_expr=top_expr[,eval(samples)]
+    samples=as.character(rownames(pd))
+    top_expr=top_expr %>% dplyr::select(samples)
     if(input$hmpsamp3==F){
       contrast=input$contrast
       contr=strsplit(contrast,"_vs_")
@@ -1444,8 +1500,8 @@ server <- function(input, output) {
 #       results=fileload()
 #       pd=pData(results$eset)
       sample=pd$sample_name[pd$maineffect %in% c(ct1,ct2)]
-      sample=as.character(sample)
-      top_expr=top_expr[,eval(sample)]}
+    sample=as.character(rownames(sample))
+    top_expr=top_expr %>% dplyr::select(sample)}
     
     #Remove rows that have variance 0 (This will avoid the Na/Nan/Inf error in heatmap)
     ind = apply(top_expr, 1, var) == 0
@@ -1636,10 +1692,10 @@ server <- function(input, output) {
     #keepGenes <- v@featureData@data %>% filter(!(seq_name %in% c('X','Y')) & !(is.na(SYMBOL)))
     pData<-phenoData(v)
     v.filter = v[rownames(v@assayData$exprs) %in% rownames(keepGenes),]
-    Pvars <- apply(exprs(v.filter),1,var)
+    Pvars <- apply(v.filter@assayData$exprs,1,var)
     select <- order(Pvars, decreasing = TRUE)[seq_len(min(n,length(Pvars)))]
     v.var <-v.filter[select,]
-    m<-exprs(v.var)
+    m<-v.var@assayData$exprs
     rownames(m) <- v.var@featureData@data$SYMBOL
     m=as.data.frame(m)
     m=unique(m)
