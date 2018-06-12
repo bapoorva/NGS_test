@@ -75,9 +75,7 @@ ui <- dashboardPage(
                 box(
                   width = 10, status = "primary",solidHeader = TRUE,
                   title = "PCA Plot",
-                fluidRow(
-                  column(6,plotOutput("biplot",width=750,height=600))
-                )
+                  plotOutput("biplot",height=600)
               ),br(),
               fluidRow(
                 column(6,uiOutput("dwldbiplot")))
