@@ -104,10 +104,10 @@ ui <- dashboardPage(
                 column(6,uiOutput("boxplotcol2"))
               ),
               uiOutput("minexprline"),
-              fluidRow(
-                column(6,plotOutput('dotplot',width = 800))
+              
+                plotOutput('dotplot')
                 #column(6,plotOutput('dotplot',width = 'auto'))
-              )),
+              ),
               box(width = 4, status = "primary",solidHeader = TRUE,title = "Gene Selection",
                   radioButtons("radio", label = h4("Gene Selection"),
                                choices = c("None" = 'none',"Upregulated" = 'up', "Downregulated" = 'down', "Both" = 'both'),
