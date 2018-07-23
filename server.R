@@ -1,8 +1,8 @@
 library(shiny)
 library(shinyBS)
-#library(pathview)
-# library("AnnotationDbi")
-# library("org.Mm.eg.db")
+library(pathview)
+library("AnnotationDbi")
+library("org.Mm.eg.db")
 library(gage)
 library(gageData)
 library(RColorBrewer)
@@ -1219,8 +1219,159 @@ server <- function(input, output) {
   output$dwldspia <- downloadHandler(
     filename = function() { paste(input$projects,'_',input$contrast, '_spia.csv', sep='') },
     content = function(file) {
-      write.csv(spiaop(), file)
+      write.csv(spia_op(), file)
     })
+  
+  ###################################################
+  ###################################################
+  ######### CREATE HEATMAP FROM SPIA ##############
+  ###################################################
+  ###################################################
+  #extract voom expression data of all genes corresponding to selected row in camera datatable
+  heatmapspia <- reactive({
+    genesid=spiagenes()  #gene list from camera
+    voom=as.data.frame(datasetInput3())#voom data
+    genes_spia<-voom[rownames(voom) %in% rownames(genesid),]
+    
+  })
+  
+  #create heatmap function
+  spiaheatmap <- function(){
+    dist2 <- function(x, ...) {as.dist(1-cor(t(x), method="pearson"))}
+    results=fileload()
+    pd=pData(results$eset)
+    expr <- heatmapspia() #voom expression data of all genes corresponding to selected row in camera datatable
+    pval=spiagenes() #gene list from camera
+    file = readexcel()
+    prj=input$projects
+    old=file$old[file$projects %in% prj]
+    old=as.character(old)
+    seq=file$seq[file$projects %in% prj]
+    seq=as.character(seq)
+    if(seq=="R"){
+      expr$ENSEMBL=rownames(expr)
+      expr=inner_join(expr,pval,by=c('ENSEMBL'='ENSEMBL'))
+      
+      expr=expr[order(expr$adj.P.Val),]
+      rownames(expr)=make.names(expr$SYMBOL,unique=T)
+      if(old=="N"){
+        expr=expr %>% dplyr::select(-ENSEMBL:-t)}
+      else if(old=="Y"){
+        expr=expr %>% dplyr::select(-ENSEMBL:-adj.P.Val)
+      }
+    }
+    else if(seq=="M"){
+      expr$id=rownames(expr)
+      pval$id=rownames(pval)
+      expr=inner_join(expr,pval,by=c('id'='id'))
+      expr=expr[order(expr$adj.P.Val),]
+      rownames(expr)=make.names(expr$SYMBOL,unique=T)
+      if(old=="N"){
+        expr=expr %>% dplyr::select(-ENSEMBL:-t)
+      }
+      else if(old=="Y"){
+        expr=expr %>% dplyr::select(-ENSEMBL:-adj.P.Val)
+      }
+    }
+    hmplim=input$hmplimspia
+    top_expr=as.data.frame(expr)
+    top_expr=top_expr[1:hmplim,]
+    validate(
+      need(nrow(top_expr)>1, "No results")
+    )
+    samples=as.character(rownames(pd))
+    top_expr=top_expr %>% dplyr::select(samples)
+    if(input$hmpsamp2spia==F){
+      contrast=input$contrast
+      contr=strsplit(contrast,"_vs_")
+      ct1=sapply(contr,"[",1)
+      ct2=sapply(contr,"[",2)
+      #       results=fileload()
+      #       pd=pData(results$eset)
+      sample=pd$sample_name[pd$maineffect %in% c(ct1,ct2)]
+      sample=as.character(sample)
+      top_expr=top_expr[,eval(sample)]}
+    validate(
+      need(nrow(top_expr)>1, "No results")
+    )
+    
+    
+    sym=rownames(top_expr)
+    #Remove rows that have variance 0 (This will avoid the Na/Nan/Inf error in heatmap)
+    ind = apply(top_expr, 1, var) == 0
+    top_expr <- top_expr[!ind,]
+    if(input$checkboxspia==TRUE){
+      d3heatmap(as.matrix(top_expr),distfun=dist2,scale="row",dendrogram=input$clusterbyspia,xaxis_font_size = 10,colors = colorRampPalette(brewer.pal(n = 9, input$hmpcolspia))(30),labRow = sym)}
+    else{d3heatmap(as.matrix(top_expr),distfun=dist2,scale="row",dendrogram=input$clusterbyspia,xaxis_font_size = 10,colors = colorRampPalette(rev(brewer.pal(n = 9, input$hmpcolspia)))(30),labRow = sym)}
+  }
+  ####################################################################################################################################################
+  spiaheatmapalt <- function(){
+    results=fileload()
+    pd=pData(results$eset)
+    dist2 <- function(x, ...) {as.dist(1-cor(t(x), method="pearson"))}
+    expr <- heatmapspia() #voom expression data of all genes corresponding to selected row in camera datatable
+    pval=spiagenes() #gene list from camera
+    file = readexcel()
+    prj=input$projects
+    old=file$old[file$projects %in% prj]
+    old=as.character(old)
+    seq=file$seq[file$projects %in% prj]
+    seq=as.character(seq)
+    if(seq=="R"){
+      expr$ENSEMBL=rownames(expr)
+      expr=inner_join(expr,pval,by=c('ENSEMBL'='ENSEMBL'))
+      expr=expr[order(expr$adj.P.Val),]
+      rownames(expr)=make.names(expr$SYMBOL,unique=T)
+      if(old=="N"){
+        expr=expr %>% dplyr::select(-ENSEMBL:-t)}
+      else if(old=="Y"){
+        expr=expr %>% dplyr::select(-ENSEMBL:-adj.P.Val)
+      }
+    }
+    else if(seq=="M"){
+      expr$id=rownames(expr)
+      pval$id=rownames(pval)
+      expr=inner_join(expr,pval,by=c('id'='id'))
+      expr=expr[order(expr$adj.P.Val),]
+      rownames(expr)=make.names(expr$SYMBOL,unique=T)
+      if(old=="N"){
+        expr=expr %>% dplyr::select(-ENSEMBL:-t)
+      }
+      else if(old=="Y"){
+        expr=expr %>% dplyr::select(-ENSEMBL:-adj.P.Val)
+      }
+    }
+    
+    hmplim=input$hmplimspia
+    top_expr=data.frame(expr)
+    top_expr=top_expr[1:hmplim,]
+    validate(
+      need(nrow(top_expr)>1, "No results")
+    )
+    samples=as.character(pd$sample_name)
+    top_expr=top_expr[,eval(samples)]
+    if(input$hmpsamp2spia==F){
+      contrast=input$contrast
+      contr=strsplit(contrast,"_vs_")
+      ct1=sapply(contr,"[",1)
+      ct2=sapply(contr,"[",2)
+      #       results=fileload()
+      #       pd=pData(results$eset)
+      sample=pd$sample_name[pd$maineffect %in% c(ct1,ct2)]
+      sample=as.character(sample)
+      top_expr=top_expr[,eval(sample)]}
+    validate(
+      need(nrow(top_expr)>1, "No results")
+    )
+    sym=rownames(top_expr)
+    #Remove rows that have variance 0 (This will avoid the Na/Nan/Inf error in heatmap)
+    ind = apply(top_expr, 1, var) == 0
+    top_expr <- top_expr[!ind,]
+    if(input$checkboxspia==TRUE){
+      aheatmap(as.matrix(top_expr),distfun=dist2,scale="row",Rowv=TRUE,Colv=TRUE,fontsize = 10,color = colorRampPalette(brewer.pal(n = 9, input$hmpcolspia))(30),labRow = sym)}
+    else{aheatmap(as.matrix(top_expr),distfun=dist2,scale="row",Rowv=TRUE,Colv=TRUE,fontsize = 10,color = colorRampPalette(rev(brewer.pal(n = 9, input$hmpcolspia)))(30),labRow = sym)}
+  }
+  
   ##################################################
   ##################################################
   ############## GAGE GENE ONTOLOGY ################
@@ -1973,15 +2124,14 @@ server <- function(input, output) {
     voom=datasetInput3()
     min=min(voom)
     max=max(voom)
-    if(input$checkbox==FALSE){
-      #val=sort(c(-2,-1,0,1,2),decreasing=TRUE)}
-      val=sort(c(seq(min,max, length.out = 5)),decreasing=TRUE)}
-    else{
-      #val=sort(c(-2,-1,0,1,2),decreasing=FALSE)
-      val=sort(c(seq(min,max, length.out = 5)),decreasing=FALSE)
-    }
+    val=sort(c(seq(min,max, length.out = 5)),decreasing=TRUE)
     df <- data.frame(x = rep(1, 5),y = val,z = factor(1:5))
-    ggplot(df, aes(x, y)) +geom_tile(aes(fill = z))+scale_fill_brewer( type = "div" , palette = hmpcol)+guides(fill=FALSE)+theme(axis.title.x=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.y=element_blank())+coord_flip()
+    if(input$checkbox==FALSE){
+      ggplot(df, aes(x, y)) +geom_tile(aes(fill = z))+scale_fill_brewer( type = "div" , palette = hmpcol)+guides(fill=FALSE)+theme(axis.title.x=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.y=element_blank())+coord_flip()
+    }
+    else{
+      ggplot(df, aes(x, y)) +geom_tile(aes(fill = z))+scale_fill_brewer( type = "div" , palette = hmpcol,direction = -1)+guides(fill=FALSE)+theme(axis.title.x=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.y=element_blank())+coord_flip()
+    }
   })
   
   output$hmpscale_out = renderPlot({
@@ -1993,15 +2143,14 @@ server <- function(input, output) {
     voom=datasetInput3()
     min=min(voom)
     max=max(voom)
-    if(input$checkbox==FALSE){
-      #val=sort(c(-2,-1,0,1,2),decreasing=TRUE)}
-      val=sort(c(seq(min,max, length.out = 5)),decreasing=TRUE)}
-    else{
-      #val=sort(c(-2,-1,0,1,2),decreasing=FALSE)
-      val=sort(c(seq(min,max, length.out = 5)),decreasing=FALSE)
-    }
+    val=sort(c(seq(min,max, length.out = 5)),decreasing=TRUE)
     df <- data.frame(x = rep(1, 5),y = val,z = factor(1:5))
-    ggplot(df, aes(x, y)) +geom_tile(aes(fill = z))+scale_fill_brewer( type = "div" , palette = hmpcol)+guides(fill=FALSE)+theme(axis.title.x=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.y=element_blank())+coord_flip()
+    if(input$checkbox2==FALSE){
+      ggplot(df, aes(x, y)) +geom_tile(aes(fill = z))+scale_fill_brewer( type = "div" , palette = hmpcol)+guides(fill=FALSE)+theme(axis.title.x=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.y=element_blank())+coord_flip()
+    }
+    else{
+      ggplot(df, aes(x, y)) +geom_tile(aes(fill = z))+scale_fill_brewer( type = "div" , palette = hmpcol,direction = -1)+guides(fill=FALSE)+theme(axis.title.x=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.y=element_blank())+coord_flip()
+    }
   })
   
   hmpscale3 <- reactive({
@@ -2009,20 +2158,41 @@ server <- function(input, output) {
     voom=datasetInput3()
     min=min(voom)
     max=max(voom)
-    if(input$checkbox==FALSE){
-      #val=sort(c(-2,-1,0,1,2),decreasing=TRUE)}
-      val=sort(c(seq(min,max, length.out = 5)),decreasing=TRUE)}
-    else{
-      #val=sort(c(-2,-1,0,1,2),decreasing=FALSE)
-      val=sort(c(seq(min,max, length.out = 5)),decreasing=FALSE)
-    }
+    val=sort(c(seq(min,max, length.out = 5)),decreasing=TRUE)
     df <- data.frame(x = rep(1, 5),y = val,z = factor(1:5))
-    ggplot(df, aes(x, y)) +geom_tile(aes(fill = z))+scale_fill_brewer( type = "div" , palette = hmpcol)+guides(fill=FALSE)+theme(axis.title.x=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.y=element_blank())+coord_flip()
+    if(input$checkbox3==FALSE){
+      ggplot(df, aes(x, y)) +geom_tile(aes(fill = z))+scale_fill_brewer( type = "div" , palette = hmpcol)+guides(fill=FALSE)+theme(axis.title.x=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.y=element_blank())+coord_flip()
+    }
+    else{
+      ggplot(df, aes(x, y)) +geom_tile(aes(fill = z))+scale_fill_brewer( type = "div" , palette = hmpcol,direction = -1)+guides(fill=FALSE)+theme(axis.title.x=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.y=element_blank())+coord_flip()
+    }
+  })
+  
+  hmpscalespia <- reactive({
+    hmpcol=input$hmpcolspia #user input-color palette
+    voom=datasetInput3()
+    min=min(voom)
+    max=max(voom)
+    val=sort(c(seq(min,max, length.out = 5)),decreasing=TRUE)
+    df <- data.frame(x = rep(1, 5),y = val,z = factor(1:5))
+    if(input$checkboxspia==FALSE){
+      ggplot(df, aes(x, y)) +geom_tile(aes(fill = z))+scale_fill_brewer( type = "div" , palette = hmpcol)+guides(fill=FALSE)+theme(axis.title.x=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.y=element_blank())+coord_flip()
+    }
+    else{
+      ggplot(df, aes(x, y)) +geom_tile(aes(fill = z))+scale_fill_brewer( type = "div" , palette = hmpcol,direction = -1)+guides(fill=FALSE)+theme(axis.title.x=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank(),axis.title.y=element_blank())+coord_flip()
+    }
+    
+    
   })
   
   output$hmpscale_out2 = renderPlot({
     hmpscale2()
   })
+  
+  output$hmpscale_out2spia = renderPlot({
+    hmpscalespia()
+  })
+  
   output$hmpscale_out3 = renderPlot({
     hmpscale3()
   })
@@ -2036,6 +2206,15 @@ server <- function(input, output) {
     top_expr=top_expr[rownames(top_expr) %in% rownames(pval),]
     mx=nrow(top_expr)
     sliderInput("hmplimcam", label = h5("Select number of genes to view in the heatmap"), min = 2,max =mx, value = mx)
+  })
+  
+  #Set limit for number of genes that can be viewed in the heatmap
+  output$hmplimspia <- renderUI({
+    pval=spiagenes() 
+    top_expr=datasetInput3()
+    top_expr=top_expr[rownames(top_expr) %in% rownames(pval),]
+    mx=nrow(top_expr)
+    sliderInput("hmplimspia", label = h5("Select number of genes to view in the heatmap"), min = 2,max =mx, value = mx)
   })
   
   #Set limit for number of genes that can be viewed in the heatmap
@@ -2056,6 +2235,11 @@ server <- function(input, output) {
   output$hmpsamp3 <- renderUI({
     checkboxInput("hmpsamp3", label = "View Heatmap of all samples", value = TRUE)
    })
+  
+  output$hmpsamp2spia <- renderUI({
+    checkboxInput("hmpsamp2spia", label = "View Heatmap of all samples", value = TRUE)
+  })
+  
   #Text title for type of heatmap being displayed in the heatmap tab
   output$htitle <- renderText({
     hmip=input$hmip
@@ -2125,6 +2309,22 @@ server <- function(input, output) {
   })
   
   # make heatmap for genes
+  output$spiaheatmap <- renderD3heatmap({
+    input$hmpcolspia #user input-color palette
+    input$clusterbyspia #user input-cluster by
+    input$checkboxspia #user input-reverse colors
+    input$gene #user input-slider input for number of genes
+    input$genelist
+    input$spiaop_rows_selected
+    input$projects
+    input$contrast
+    input$hmpsamp2spia
+    input$hmplimspia
+    spiaheatmap()
+    
+  })
+  
+  # make heatmap for genes
   output$goheatmap <- renderD3heatmap({
     input$hmpcol #user input-color palette
     input$clusterby #user input-cluster by
@@ -2191,7 +2391,17 @@ server <- function(input, output) {
       dev.off()
     })
 
-  
+  #Download heatmaps 
+  output$downloadspiaheatmap <- downloadHandler(
+    filename = function(){
+      paste0('SPIA_heatmap','.jpg',sep='')
+    },
+    content = function(file){
+      png(file)
+      jpeg(file, quality = 100, width = 800, height = 1300)
+      spiaheatmapalt()
+      dev.off()
+    })
   
   
 

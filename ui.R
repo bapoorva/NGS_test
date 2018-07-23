@@ -14,13 +14,13 @@ ui <- dashboardPage(
                    div(style="overflow-y: scroll"),
                    tags$head(tags$style(HTML(".sidebar { height: 170vh; overflow-y: auto; }" ))),
                    #sidebarMenu(
-                     #menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard"))),
+                   #menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard"))),
                    uiOutput("projects"),
                    fluidRow(
                      column(12,uiOutput("contrasts"))
                    ),
-              sidebarMenu(
-                    #menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+                   sidebarMenu(
+                     #menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
                      menuItem('PCA-Plot', tabName = 'pcaplot', icon = icon('hand-o-right'), 
                               menuSubItem("PCA Plot", tabName = "dashboard"),
                               menuSubItem('Display Variances', tabName = 'var'),
@@ -30,26 +30,26 @@ ui <- dashboardPage(
                               menuSubItem('View volcano plot', tabName = 'volcanoplot'),
                               menuSubItem('View Limma results of Multiple Contrasts', tabName = 'multilimma'),
                               menuSubItem(icon=NULL,checkboxInput("check", label = "Display Contrast List", value = FALSE)))
-                     ),#end of sidebar menu
-                        conditionalPanel(
-                        condition = "input.check ==true",
-                        uiOutput("contrastslimma")
-                          ),
-              sidebarMenu(
-                menuItem('View Raw Expression Data', tabName = 'voom', icon = icon('hand-o-right')),
-                menuItem('View Sample Data', tabName = 'phenofile', icon = icon('hand-o-right')),
-                  menuItem('Generate Heatmap', tabName = 'heatmap', icon = icon('hand-o-right')),
-                  menuItem('GSEA Using Camera', tabName = 'cam', icon = icon('hand-o-right'),
-                           menuSubItem('View Camera results', tabName = 'camera'),
-                           menuSubItem(icon=NULL,uiOutput("cameradd"))),
-                  menuItem('Pathway Analysis using SPIA', tabName = 'spia', icon = icon('hand-o-right')),
-                  menuItem('GO Analysis using GAGE', icon = icon('hand-o-right'),
-                           menuSubItem('GAGE Results', tabName = 'gogage')
-                           )
-                        ),#end of sidebar menu
-              sidebarMenu(
-                menuItem("Help Page", tabName = "help", icon = icon("hand-o-right")))
-      ),#end dashboardSidebar
+                   ),#end of sidebar menu
+                   conditionalPanel(
+                     condition = "input.check ==true",
+                     uiOutput("contrastslimma")
+                   ),
+                   sidebarMenu(
+                     menuItem('View Raw Expression Data', tabName = 'voom', icon = icon('hand-o-right')),
+                     menuItem('View Sample Data', tabName = 'phenofile', icon = icon('hand-o-right')),
+                     menuItem('Generate Heatmap', tabName = 'heatmap', icon = icon('hand-o-right')),
+                     menuItem('GSEA Using Camera', tabName = 'cam', icon = icon('hand-o-right'),
+                              menuSubItem('View Camera results', tabName = 'camera'),
+                              menuSubItem(icon=NULL,uiOutput("cameradd"))),
+                     menuItem('Pathway Analysis using SPIA', tabName = 'spia', icon = icon('hand-o-right')),
+                     menuItem('GO Analysis using GAGE', icon = icon('hand-o-right'),
+                              menuSubItem('GAGE Results', tabName = 'gogage')
+                     )
+                   ),#end of sidebar menu
+                   sidebarMenu(
+                     menuItem("Help Page", tabName = "help", icon = icon("hand-o-right")))
+  ),#end dashboardSidebar
   
   
   dashboardBody(
@@ -72,10 +72,10 @@ ui <- dashboardPage(
                   column(6,uiOutput("pcslide"))
                 ),br(),
                 uiOutput("ellipse")),
-                box(
-                  width = 10, status = "primary",solidHeader = TRUE,
-                  title = "PCA Plot",
-                  plotOutput("biplot",height=600)
+              box(
+                width = 10, status = "primary",solidHeader = TRUE,
+                title = "PCA Plot",
+                plotOutput("biplot",height=600)
               ),br(),
               fluidRow(
                 column(6,uiOutput("dwldbiplot")))
@@ -92,52 +92,52 @@ ui <- dashboardPage(
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
+      
       tabItem(tabName = "geneselection",
               box(width = 10, status = "primary",solidHeader = TRUE,title = "Project Description",
-              textOutput("pdesc")),
+                  textOutput("pdesc")),
               
               fluidRow(
-              box(width = 8, status = "primary",solidHeader = TRUE,title = "Dot Plot of the gene of interest",
-              fluidRow(
-                column(6,uiOutput("boxplotcol")),
-                column(6,uiOutput("boxplotcol2"))
-              ),
-              uiOutput("minexprline"),
-              
-                plotOutput('dotplot')
-                #column(6,plotOutput('dotplot',width = 'auto'))
-              ),
-              box(width = 4, status = "primary",solidHeader = TRUE,title = "Gene Selection",
-                  radioButtons("radio", label = h4("Gene Selection"),
-                               choices = c("None" = 'none',"Upregulated" = 'up', "Downregulated" = 'down', "Both" = 'both'),
-                               selected = 'none'),
-                 
-                  sliderInput("lfc", label = h4("Fold Change"), min = 0.5,max = 6, value = 2),
-                  sliderInput("apval", label = h4("P. Value"), min = 0.01,max = 0.2, value =0.05),br(),
-                  fluidRow(
-                  column(6,downloadButton('dwld','Download results table')),
-                  column(6,downloadButton('downloaddotplot', 'Download Dot plot')))
-                  )),
+                box(width = 8, status = "primary",solidHeader = TRUE,title = "Dot Plot of the gene of interest",
+                    fluidRow(
+                      column(6,uiOutput("boxplotcol")),
+                      column(6,uiOutput("boxplotcol2"))
+                    ),
+                    uiOutput("minexprline"),
+                    
+                    plotOutput('dotplot')
+                    #column(6,plotOutput('dotplot',width = 'auto'))
+                ),
+                box(width = 4, status = "primary",solidHeader = TRUE,title = "Gene Selection",
+                    radioButtons("radio", label = h4("Gene Selection"),
+                                 choices = c("None" = 'none',"Upregulated" = 'up', "Downregulated" = 'down', "Both" = 'both'),
+                                 selected = 'none'),
+                    
+                    sliderInput("lfc", label = h4("Fold Change"), min = 0.5,max = 6, value = 2),
+                    sliderInput("apval", label = h4("P. Value"), min = 0.01,max = 0.2, value =0.05),br(),
+                    fluidRow(
+                      column(6,downloadButton('dwld','Download results table')),
+                      column(6,downloadButton('downloaddotplot', 'Download Dot plot')))
+                )),
               
               box(width = 12, status = "primary",solidHeader = TRUE,title = "Limma data",
-              h5(p(div(span("Note:fc - Fold Change",style="color:red")))),
-              br(),textOutput("contrdesc"),br(),DT::dataTableOutput('table'))),
-
+                  h5(p(div(span("Note:fc - Fold Change",style="color:red")))),
+                  br(),textOutput("contrdesc"),br(),DT::dataTableOutput('table'))),
+      
       tabItem(tabName = "volcanoplot",
               fluidRow(
-                 column(6,plotlyOutput("volcanoplot",width=800,height=700)),
-                 column(width = 3, offset = 2,uiOutput("volcdrop")),
-                 column(width =4, offset = 2,uiOutput("volcslider"))
-               ),br(),DT::dataTableOutput('table_volc')),
+                column(6,plotlyOutput("volcanoplot",width=800,height=700)),
+                column(width = 3, offset = 2,uiOutput("volcdrop")),
+                column(width =4, offset = 2,uiOutput("volcslider"))
+              ),br(),DT::dataTableOutput('table_volc')),
       tabItem(tabName = "multilimma",DT::dataTableOutput('table_TRUE'),fluidRow(uiOutput("dwldmultitab"))),
       
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-            tabItem(tabName = "voom",DT::dataTableOutput('table3'),
-                    fluidRow(uiOutput("dwldrawtab"))
-                    ),
+      tabItem(tabName = "voom",DT::dataTableOutput('table3'),
+              fluidRow(uiOutput("dwldrawtab"))
+      ),
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -160,30 +160,30 @@ ui <- dashboardPage(
               ),
               
               box(width = 4, status = "primary",solidHeader = TRUE,title = "Controls",
-              selectInput("hmip", "Select Heatmap input type",c('Top number of genes' = "genenum",'Enter Genelist' = "geneli", 'Top Variable genes' = "vargenes")),
-              selectInput("hmpcol", "Select Heatmap Color Palette",c('YlGnBu' = "YlGnBu",'RdBu' = "RdBu",'YlOrRd' = "YlOrRd",'PRGn'="PRGn", 'Blues' = "Blues")),
-              selectInput("clusterby", "Cluster By",c('Both'="both",'Row' = "row",'Column' = "column",'None' = "none")),
-              checkboxInput("checkbox", label = "Reverse Colors", value = FALSE),
-              
-              conditionalPanel(
-                condition = "input.hmip == 'genenum'",
-                uiOutput("dropdown"),
-                sliderInput("gene", label = h4("Top number of genes"), min = 2,max = 500, value = 50)
-                ),
-              conditionalPanel(
-                condition = "input.hmip == 'geneli'",
-                selectInput(inputId = 'selectidentifier',label='Select Identifier',choices=list('Ensembl ID'='ensembl','Entrez Id'='entrez','Gene Symbol'='genesym')),
-                fileInput('genelistfile', 'Upload Text File',accept=c('text/csv','text/comma-separated-values,text/plain','.txt')),
-                actionButton(inputId = 'ga', label = 'Display Results')
-                ),
-              conditionalPanel(
-                condition = "input.hmip == 'vargenes'",
-                #uiOutput("dropdown"),
-                sliderInput("vgene", label = h4("Top variable genes"), min = 2,max = 500, value = 50)
-              ),br(),
-              downloadButton('downloadheatmap', 'Download')
+                  selectInput("hmip", "Select Heatmap input type",c('Top number of genes' = "genenum",'Enter Genelist' = "geneli", 'Top Variable genes' = "vargenes")),
+                  selectInput("hmpcol", "Select Heatmap Color Palette",c('YlGnBu' = "YlGnBu",'RdBu' = "RdBu",'YlOrRd' = "YlOrRd",'PRGn'="PRGn", 'Blues' = "Blues")),
+                  selectInput("clusterby", "Cluster By",c('Both'="both",'Row' = "row",'Column' = "column",'None' = "none")),
+                  checkboxInput("checkbox", label = "Reverse Colors", value = FALSE),
+                  
+                  conditionalPanel(
+                    condition = "input.hmip == 'genenum'",
+                    uiOutput("dropdown"),
+                    sliderInput("gene", label = h4("Top number of genes"), min = 2,max = 500, value = 50)
+                  ),
+                  conditionalPanel(
+                    condition = "input.hmip == 'geneli'",
+                    selectInput(inputId = 'selectidentifier',label='Select Identifier',choices=list('Ensembl ID'='ensembl','Entrez Id'='entrez','Gene Symbol'='genesym')),
+                    fileInput('genelistfile', 'Upload Text File',accept=c('text/csv','text/comma-separated-values,text/plain','.txt')),
+                    actionButton(inputId = 'ga', label = 'Display Results')
+                  ),
+                  conditionalPanel(
+                    condition = "input.hmip == 'vargenes'",
+                    #uiOutput("dropdown"),
+                    sliderInput("vgene", label = h4("Top variable genes"), min = 2,max = 500, value = 50)
+                  ),br(),
+                  downloadButton('downloadheatmap', 'Download')
               )#end box
-              ),#end tabItem
+      ),#end tabItem
       
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -191,35 +191,57 @@ ui <- dashboardPage(
       
       tabItem(tabName = "camera",
               fluidRow(
-               box(width = 8, status = "primary",solidHeader = TRUE,title = "Camera Heatmap",
-              fluidRow(
-                column(6,uiOutput('hmplimcam')),
-                column(width = 3, offset = 2,plotOutput('hmpscale_out2',width = 200,height = 65))
-              ),
-              fluidRow(
-                column(6,uiOutput('hmpsamp2')),
-                column(6,h4(""))
-              ),
-              d3heatmapOutput('camheatmap',width=550,height=900)),
-              box(width = 4, status = "primary",solidHeader = TRUE,title = "Controls",
-                  selectInput("hmpcol2", "Select Heatmap Color Palette",c('YlGnBu' = "YlGnBu",'RdBu' = "RdBu",'YlOrRd' = "YlOrRd",'PRGn'="PRGn", 'Blues' = "Blues")),
-                  selectInput("clusterby2", "Cluster By",c('Both'="both",'Row' = "row",'Column' = "column",'None' = "none")),
-                  checkboxInput("checkbox2", label = "Reverse Colors", value = FALSE),
-              br(),
-              downloadButton('downloadcamheatmap', 'Download Heatmap'))),
+                box(width = 8, status = "primary",solidHeader = TRUE,title = "Camera Heatmap",
+                    fluidRow(
+                      column(6,uiOutput('hmplimcam')),
+                      column(width = 3, offset = 2,plotOutput('hmpscale_out2',width = 200,height = 65))
+                    ),
+                    fluidRow(
+                      column(6,uiOutput('hmpsamp2')),
+                      column(6,h4(""))
+                    ),
+                    d3heatmapOutput('camheatmap',width=550,height=900)),
+                box(width = 4, status = "primary",solidHeader = TRUE,title = "Controls",
+                    selectInput("hmpcol2", "Select Heatmap Color Palette",c('YlGnBu' = "YlGnBu",'RdBu' = "RdBu",'YlOrRd' = "YlOrRd",'PRGn'="PRGn", 'Blues' = "Blues")),
+                    selectInput("clusterby2", "Cluster By",c('Both'="both",'Row' = "row",'Column' = "column",'None' = "none")),
+                    checkboxInput("checkbox2", label = "Reverse Colors", value = FALSE),
+                    br(),
+                    downloadButton('downloadcamheatmap', 'Download Heatmap'))),
               box(width = 12, status = "primary",solidHeader = TRUE,title = "Table",
-              DT::dataTableOutput('tablecam'),textOutput("camdesc"),DT::dataTableOutput('campick3'))
+                  DT::dataTableOutput('tablecam'),textOutput("camdesc"),DT::dataTableOutput('campick3'))
               
               
               
-              ),#end tabItem
+      ),#end tabItem
       
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       
-      tabItem(tabName = "spia", DT::dataTableOutput('spiaop'),textOutput("spiadesc"),DT::dataTableOutput('spiagenes')),
-      
+      tabItem(tabName = "spia", 
+              fluidRow(
+                box(width = 8, status = "primary",solidHeader = TRUE,title = "SPIA Heatmap",
+                    fluidRow(
+                      column(6,uiOutput('hmplimspia')),
+                      column(width = 3, offset = 2,plotOutput('hmpscale_out2spia',width = 200,height = 65))
+                    ),
+                    fluidRow(
+                      column(6,uiOutput('hmpsamp2spia')),
+                      column(6,h4(""))
+                    ),
+                    d3heatmapOutput('spiaheatmap',width=550,height=900)),
+                box(width = 4, status = "primary",solidHeader = TRUE,title = "Controls",
+                    selectInput("hmpcolspia", "Select Heatmap Color Palette",c('YlGnBu' = "YlGnBu",'RdBu' = "RdBu",'YlOrRd' = "YlOrRd",'PRGn'="PRGn", 'Blues' = "Blues")),
+                    selectInput("clusterbyspia", "Cluster By",c('Both'="both",'Row' = "row",'Column' = "column",'None' = "none")),
+                    checkboxInput("checkboxspia", label = "Reverse Colors", value = FALSE),
+                    br(),
+                    downloadButton('downloadspiaheatmap', 'Download Heatmap'),
+                    hr(),
+                    downloadButton('dwldspia', 'Download SPIA Results'))),
+              
+              box(width = 12, status = "primary",solidHeader = TRUE,title = "Table",
+                  DT::dataTableOutput('spiaop'),textOutput("spiadesc"),DT::dataTableOutput('spiagenes'))
+      ),
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -270,7 +292,7 @@ ui <- dashboardPage(
               h4(p(strong("2. Project Summary and Results"))),
               h4("Select a project and a comparison. (Comparisons are automatically populated in the drop-down menu)"),
               h4(p(div(span("The Project Summary and Results tab",style="color:blue"), "will display the limma (differential expression analysis) output for that comparison in a  table. Clicking on any row will display the dot plot for that gene. Select an Attribute from the drop-dowm menu near the dot-plot to color the plot by that feature."))),
-      
+              
               h4("Make a Gene Selection by selecting the radio button to view the list of upregulated and/or downregulated genes in the ", span("Results tab",style="color:blue")),   
               h4(p(div("Type in the Fold Change cutoff and Adjusted PValue cutoff and view the updated table in the same tab. Click on",em("Download Data"),"button to download the table as a csv file"))),
               h4(p(div(span("Note:Make sure the radio button 'None' is not selected when setting FC and P.Value cutoffs",style="color:red")))),
@@ -280,7 +302,7 @@ ui <- dashboardPage(
               h4(p(strong("3. Raw Expression Data"))),
               h4("Click on the", em("Click to view the Raw expression data"),"button to view the expression data in the",span("Raw Data tab",style="color:blue")),
               br(),
-               h4(p(strong("4. Heatmap"))),
+              h4(p(strong("4. Heatmap"))),
               h4("Select Heatmap type from drop-down menu and give appropriate inputs to view the Heatmap in the",span("Generate Heatmap tab",style="color:blue")),
               h4(p(div("Select color using the",em("Heatmap color palette"),"dropdown and reverse color palette using the",em("Reverse Colors"),"checkbox. Cluster by Rows and/or columns or none by selecting the option from the",em("Cluster By"),"drop-down menu"))),
               h4(p(div("Use the",em("Slider"),"to select number of genes if Heatmap type selected is 'Top number of genes'.Default is 50, minimum is 2 and maximum is 500"))),
@@ -315,9 +337,9 @@ ui <- dashboardPage(
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-              
-              )
+      
     )
   )
+)
 
 
