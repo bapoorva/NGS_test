@@ -125,11 +125,12 @@ ui <- dashboardPage(
                   br(),textOutput("contrdesc"),br(),DT::dataTableOutput('table'))),
       
       tabItem(tabName = "volcanoplot",
-              fluidRow(
-                column(6,plotlyOutput("volcanoplot",width=800,height=700)),
-                column(width = 3, offset = 2,uiOutput("volcdrop")),
-                column(width =4, offset = 2,uiOutput("volcslider"))
-              ),br(),DT::dataTableOutput('table_volc')),
+              box(width = 8, status = "primary",solidHeader = TRUE,title = "Volcano Plot",
+                  plotlyOutput("volcanoplot",width=800,height=700)),
+              box(width = 4, status = "primary",solidHeader = TRUE,title = "Controls",
+                  uiOutput("volcdrop"),br(),uiOutput("volcslider"),br(),
+                  downloadButton('dwldvolcanoplot', 'Download Volcano plot')),
+                br(),DT::dataTableOutput('table_volc')),
       tabItem(tabName = "multilimma",DT::dataTableOutput('table_TRUE'),fluidRow(uiOutput("dwldmultitab"))),
       
       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

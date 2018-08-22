@@ -1,6 +1,6 @@
 library(shiny)
 library(shinyBS)
-library(pathview)
+#library(pathview)
 library("AnnotationDbi")
 library("org.Mm.eg.db")
 library(gage)
@@ -40,63 +40,63 @@ plotTheme <-theme_bw() + theme(axis.title.x = element_text(face="bold", size=12)
                                axis.title.y = element_text(face="bold", size=12),
                                axis.text.y  = element_text(angle=0, vjust=0.5, size=12))
 
-my_username <- c("Morriseylab","ZARJ")
-my_password <- c("edmorrisey123","ZARJ123")
+my_username <- c("Morriseylab","Aranylab","Epsteinlab","Jainlab","Kellylab","Kottonlab","MBlab","KMlab","VKlab")
+my_password <- c("emorrisey$123","zarany@1234#","jepstein$999","rjain@2018","dkelly!3112","d@kotton123","mbeers#2018","kmusunuru@1212","vkrymskaya@123$")
 
 server <- function(input, output) {
 
-  # values <- reactiveValues(authenticated = FALSE)
-  # 
-  # # Return the UI for a modal dialog with data selection input. If 'failed'
-  # # is TRUE, then display a message that the previous value was invalid.
-  # dataModal <- function(failed = FALSE) {
-  #   modalDialog(
-  #     textInput("username", "Username:"),
-  #     passwordInput("password", "Password:"),
-  #     footer = tagList(
-  #       # modalButton("Cancel"),
-  #       actionButton("ok", "OK")
-  #     )
-  #   )
-  # }
-  # 
-  # # Show modal when button is clicked.
-  # # This `observe` is suspended only whith right user credential
-  # 
-  # obs1 <- observe({
-  #   showModal(dataModal())
+  values <- reactiveValues(authenticated = FALSE)
+
+  # Return the UI for a modal dialog with data selection input. If 'failed'
+  # is TRUE, then display a message that the previous value was invalid.
+  dataModal <- function(failed = FALSE) {
+    modalDialog(
+      textInput("username", "Username:"),
+      passwordInput("password", "Password:"),
+      footer = tagList(
+        # modalButton("Cancel"),
+        actionButton("ok", "OK")
+      )
+    )
+  }
+
+  # Show modal when button is clicked.
+  # This `observe` is suspended only whith right user credential
+
+  obs1 <- observe({
+    showModal(dataModal())
+  })
+
+  # When OK button is pressed, attempt to authenticate. If successful,
+  # remove the modal.
+
+  obs2 <- observe({
+    req(input$ok)
+    isolate({
+      Username <- input$username
+      Password <- input$password
+    })
+    Id.username <- which(my_username == Username)
+    Id.password <- which(my_password == Password)
+    if (length(Id.username) > 0 & length(Id.password) > 0) {
+      if (Id.username == Id.password) {
+        Logged <<- TRUE
+        values$authenticated <- TRUE
+        obs1$suspend()
+        removeModal()
+
+      } else {
+        values$authenticated <- FALSE
+      }
+    }
+  })
+
+
+  # output$dataInfo <- renderPrint({
+  #   if (values$authenticated) "OK!!!!!"
+  #   else "You are NOT authenticated"
   # })
-  # 
-  # # When OK button is pressed, attempt to authenticate. If successful,
-  # # remove the modal.
-  # 
-  # obs2 <- observe({
-  #   req(input$ok)
-  #   isolate({
-  #     Username <- input$username
-  #     Password <- input$password
-  #   })
-  #   Id.username <- which(my_username == Username)
-  #   Id.password <- which(my_password == Password)
-  #   if (length(Id.username) > 0 & length(Id.password) > 0) {
-  #     if (Id.username == Id.password) {
-  #       Logged <<- TRUE
-  #       values$authenticated <- TRUE
-  #       obs1$suspend()
-  #       removeModal()
-  #       
-  #     } else {
-  #       values$authenticated <- FALSE
-  #     }
-  #   }
-  # })
-  # 
-  # 
-  # # output$dataInfo <- renderPrint({
-  # #   if (values$authenticated) "OK!!!!!"
-  # #   else "You are NOT authenticated"
-  # # })
-  ###################################################
+  ##################################################
   ###################################################
   ####### LOAD EXCEL AND POPULATE DROP DOWN #########
   ###################################################
@@ -104,9 +104,9 @@ server <- function(input, output) {
   
   #Read the parameter file
   readexcel = reactive({
-    #user=input$username
-    file = read.csv(paste("data/param.csv",sep=""))
-    #file = read.csv(paste("data/",user,"_param.csv",sep=""))
+    user=input$username
+    #file = read.csv(paste("data/param.csv",sep=""))
+    file = read.csv(paste("data/",user,"_param.csv",sep=""))
   })
   
   #Get Project list and populate drop-down
@@ -222,12 +222,13 @@ server <- function(input, output) {
     downloadButton('downloadbiplot', 'Download Biplot')
   }) 
   
+
   output$downloadbiplot <- downloadHandler(
     filename = function() {
-      paste0("biplot.jpg")
+      paste0("biplot.pdf")
     },
     content = function(file){
-      jpeg(file, quality = 100, width = 800, height = 800)
+      pdf(file,width=14,height = 9,useDingbats=FALSE)
       plot(plotbiplot())
       dev.off()
     })
@@ -571,10 +572,10 @@ server <- function(input, output) {
       }
       p <- plot_ly(data = diff_df, x = diff_df$logFC, y = -log10(diff_df$adj.P.Val),text = diff_df$SYMBOL, mode = "markers", color = diff_df$group) %>% layout(title ="Volcano Plot",xaxis=list(title="Log Fold Change"),yaxis=list(title="-log10(FDR)")) %>%
         layout(annotations = a)
-    }
+        }
       else{
         p <- plot_ly(data = diff_df, x = diff_df$logFC, y = -log10(diff_df$adj.P.Val),text = diff_df$SYMBOL, mode = "markers", color = diff_df$group) %>% layout(title ="Volcano Plot",xaxis=list(title="Log Fold Change"),yaxis=list(title="-log10(FDR)"))
-      }
+          }
     }
     else if(input$volcdrop=="go"){
       top_peaks2=GOHeatup()
@@ -600,11 +601,42 @@ server <- function(input, output) {
         )
       }
       p <- plot_ly(data = diff_df, x = diff_df$logFC, y = -log10(diff_df$adj.P.Val),text = diff_df$SYMBOL, mode = "markers", color = diff_df$group) %>% layout(title ="Volcano Plot",xaxis=list(title="Log Fold Change"),yaxis=list(title="-log10(FDR)")) 
+      }
+    p
+  })
+  
+  volcanoplot_dout = reactive({
+    diff_df=datasetInput0.5()
+    
+    FDR=input$apval
+    lfc=input$lfc
+    
+    if(input$volcdrop=="signi"){
+      diff_df$group <- "NotSignificant"
+      diff_df[which(diff_df['adj.P.Val'] < FDR & abs(diff_df['logFC']) < lfc ),"group"] <- "Filtered by FDR"
+      diff_df[which(diff_df['adj.P.Val'] > FDR & abs(diff_df['logFC']) > lfc ),"group"] <- "Filtered by FC"
+      diff_df[which(diff_df['adj.P.Val'] < FDR & abs(diff_df['logFC']) > lfc ),"group"] <- "Significant (Filtered by both FDR and FC)"
       
+      # Find and label the top peaks..
+      n=input$volcslider
+      if(n>0){
+        top_peaks <- diff_df[with(diff_df, order(adj.P.Val,logFC)),][1:n,]
+        top_peaks <- rbind(top_peaks, diff_df[with(diff_df, order(adj.P.Val,-logFC)),][1:n,])
+        p <- ggplot(data = diff_df, aes(x = diff_df$logFC, y = -log10(diff_df$adj.P.Val))) + geom_point_rast(aes(color=diff_df$group)) +ggtitle("Volcano Plot") + xlab("Log Fold Change") + ylab("-log10(FDR)") +labs(color="")+ geom_label_repel(data=top_peaks,aes(x = top_peaks$logFC, y = -log10(top_peaks$adj.P.Val),label=top_peaks$SYMBOL)) + theme_bw()
+      }
+      else{
+        p <- ggplot(data = diff_df, aes(x = diff_df$logFC, y = -log10(diff_df$adj.P.Val))) + geom_point_rast(aes(color=diff_df$group)) +ggtitle("Volcano Plot") + xlab("Log Fold Change") + ylab("-log10(FDR)") +labs(color="") + theme_bw()
+      }
     }
-    
-    
-    
+    else if(input$volcdrop=="go"){
+      top_peaks2=GOHeatup()
+      diff_df$group <- "All genes"
+      diff_df[which(diff_df$SYMBOL %in% top_peaks2$SYMBOL ),"group"] <- "Selected_genes"
+      
+      # Find and label the top peaks..
+      top_peaks <- diff_df[diff_df$SYMBOL %in% top_peaks2$SYMBOL,]
+       p <- ggplot(data = diff_df, aes(x = diff_df$logFC, y = -log10(diff_df$adj.P.Val))) + geom_point_rast(aes(color=diff_df$group)) +ggtitle("Volcano Plot") + xlab("Log Fold Change") + ylab("-log10(FDR)") +labs(color="") + theme_bw()
+    }
     p
   })
   output$table_volc = DT::renderDataTable({
@@ -631,6 +663,15 @@ server <- function(input, output) {
   })
   
  
+  output$dwldvolcanoplot <- downloadHandler(
+    filename = function() {
+      paste0("volcano.pdf")
+    },
+    content = function(file){
+      pdf(file,width=14,height = 9,useDingbats=FALSE)
+      plot(volcanoplot_dout())
+      dev.off()
+    })
   ###################################################
   ###################################################
   ############## DISPLAY VOOM DATA ##################
@@ -2355,11 +2396,12 @@ server <- function(input, output) {
   #Download heatmaps 
   output$downloadheatmap <- downloadHandler(
     filename = function(){
-      paste0('heatmap','.jpg',sep='')
+      paste0('heatmap','.pdf',sep='')
     },
     content = function(file){
-      png(file)
-      jpeg(file, quality = 100, width = 800, height = 1300)
+      #png(file)
+      #jpeg(file, quality = 100, width = 800, height = 1300)
+      pdf(file,width=9,height =14,useDingbats=FALSE)
       if(input$hmip == 'genenum'){heatmapalt()}
       else if(input$hmip == 'geneli'){heatmap2alt()}
              else if(input$hmip == 'vargenes' ){varheatmapalt()}
@@ -2370,11 +2412,12 @@ server <- function(input, output) {
   #Download heatmaps 
   output$downloadcamheatmap <- downloadHandler(
     filename = function(){
-      paste0('camera_heatmap','.jpg',sep='')
+      paste0('camera_heatmap','.pdf',sep='')
     },
     content = function(file){
-      png(file)
-      jpeg(file, quality = 100, width = 800, height = 1300)
+      # png(file)
+      # jpeg(file, quality = 100, width = 800, height = 1300)
+      pdf(file,width=9,height = 14,useDingbats=FALSE)
       camheatmapalt()
       dev.off()
     })
@@ -2382,11 +2425,12 @@ server <- function(input, output) {
   #Download heatmaps 
   output$downloadgoheatmap <- downloadHandler(
     filename = function(){
-      paste0('GO_heatmap','.jpg',sep='')
+      paste0('GO_heatmap','.pdf',sep='')
     },
     content = function(file){
-      png(file)
-      jpeg(file, quality = 100, width = 800, height = 1300)
+      # png(file)
+      # jpeg(file, quality = 100, width = 800, height = 1300)
+      pdf(file,width=9,height = 14,useDingbats=FALSE)
       goheatmapupalt()
       dev.off()
     })
@@ -2394,11 +2438,12 @@ server <- function(input, output) {
   #Download heatmaps 
   output$downloadspiaheatmap <- downloadHandler(
     filename = function(){
-      paste0('SPIA_heatmap','.jpg',sep='')
+      paste0('SPIA_heatmap','.pdf',sep='')
     },
     content = function(file){
-      png(file)
-      jpeg(file, quality = 100, width = 800, height = 1300)
+      # png(file)
+      # jpeg(file, quality = 100, width = 800, height = 1300)
+      pdf(file,width=9,height = 14,useDingbats=FALSE)
       spiaheatmapalt()
       dev.off()
     })
