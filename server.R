@@ -41,7 +41,7 @@ plotTheme <-theme_bw() + theme(axis.title.x = element_text(face="bold", size=12)
                                axis.text.y  = element_text(angle=0, vjust=0.5, size=12))
 
 my_username <- c("Morriseylab","Aranylab","Epsteinlab","Jainlab","Kellylab","Kottonlab","MBlab","KMlab","VKlab","allusers")
-my_password <- c("emorrisey$123","zarany@1234#","jepstein$999","rjain@2018","dkelly!3112","d@kotton123","mbeers#2018","kmusunuru@1212","vkrymskaya@123$","allusers@1s")
+my_password <- c("emorrisey$123","zarany@1234#","jepstein$999","rjain@2018","dkelly!3112","d@kotton123","mbeers#2018","kmusunuru@1212","vkrymskaya@123$","allusers@1")
 
 server <- function(input, output) {
 
