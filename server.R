@@ -105,8 +105,12 @@ server <- function(input, output) {
   #Read the parameter file
   readexcel = reactive({
     user=input$username
-    #file = read.csv(paste("data/param.csv",sep=""))
-    file = read.csv(paste("data/",user,"_param.csv",sep=""))
+    file = read.csv(paste("data/allusers_param.csv",sep=""))
+    if(user=="allusers"){
+      file=file
+    }else{
+      file=file[file$user==user,]
+    }
   })
   
   #Get Project list and populate drop-down
@@ -138,6 +142,22 @@ server <- function(input, output) {
     selectInput("contrast","Select a comparison",contrasts,"pick one")
   })
 
+  #Display file in dashboard
+  output$dashdata<- renderTable({
+    user=input$username
+    #read.csv(paste("data/",user,"_param.csv",sep=""))
+    file=read.csv('data/allusers_param.csv',stringsAsFactors = F)
+    if(user=="allusers"){
+      file=file
+      colnames(file)=c("Project Name","Project Description","Old?(Y/N)","Type(RNA/Microarray)","Username")
+      file=file[order(file$`Project Name`),]
+    }else{
+      file=file[file$user==user,] %>% dplyr::select(-old:-user)
+      colnames(file)=c("Project Name","Project Description")
+      file=file[order(file$`Project Name`),]
+      
+    }
+  }, digits = 1)
   ###################################################
   ###################################################
   ##################### PCA PLOT ####################

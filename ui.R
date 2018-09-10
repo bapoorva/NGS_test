@@ -7,22 +7,25 @@ library(d3heatmap)
 library(shinyjs)
 library(rglwidget)
 library(SPIA)
-
+options(shiny.sanitize.errors = FALSE)
 ui <- dashboardPage(
   dashboardHeader(title = "NGS Data Analysis Web Interface",titleWidth = 350),
   dashboardSidebar(width = 350,
                    div(style="overflow-y: scroll"),
-                   tags$head(tags$style(HTML(".sidebar { height: 170vh; overflow-y: auto; }" ))),
-                   #sidebarMenu(
-                   #menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard"))),
+                   tags$style(type="text/css",
+                              ".shiny-output-error { visibility: hidden; }",
+                              ".shiny-output-error:before { visibility: hidden; }"
+                   ),
+                   tags$head(tags$style(HTML(".sidebar { height: 250vh; overflow-y: auto; }" ))),
+                   sidebarMenu(
+                   menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
                    uiOutput("projects"),
                    fluidRow(
                      column(12,uiOutput("contrasts"))
                    ),
-                   sidebarMenu(
-                     #menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+                   #sidebarMenu(
                      menuItem('PCA-Plot', tabName = 'pcaplot', icon = icon('hand-o-right'), 
-                              menuSubItem("PCA Plot", tabName = "dashboard"),
+                              menuSubItem("PCA Plot", tabName = "pcaplot"),
                               menuSubItem('Display Variances', tabName = 'var'),
                               menuSubItem('Show 3D plot', tabName = '3dplot')),
                      menuItem('Project Summary and Results', tabName = 'summres', icon = icon('hand-o-right'), 
@@ -59,6 +62,13 @@ ui <- dashboardPage(
     useShinyjs(),
     tabItems(
       tabItem(tabName = "dashboard",
+              box(
+                width = 12, status = "primary",solidHeader = TRUE,
+                title = "RNA-Seq Data Sets",
+                tableOutput("dashdata")
+              )
+      ),
+      tabItem(tabName = "pcaplot",
               box(
                 width = 10, status = "primary",solidHeader = TRUE,
                 title = "Select Options",
